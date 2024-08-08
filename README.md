@@ -9,6 +9,6 @@ Additionally, it can save and work with received data to further utilize API dat
 
 # Set-up
 - Clone the repo into the directory of your choice
-- Install interactions-py via `pip install interactions-py`
+- Install the requirements via `pip install -r requirements.txt`
 - Get a Discord Bot Token via their [Developer Platform](https://discord.com/developers)
 - Start `main.py`

@@ -395,7 +395,8 @@ async def ar_refresh():
     with open("bs_ar.json","w") as f:
         json.dump(ar,f)
     channel = bot.get_channel(1028719425035178016)
-    await channel.send(f"AR compiled.")
+    if silence <= time.time():
+        await channel.send(f"AR compiled.",silent=True)
     print("AR updated.")
 
 # ------------------------
@@ -947,95 +948,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
         embed.add_field(name=f"<:qito_trophy:1137140150065954816> {data['trophies']:,}",value=f"Best: {data['highestTrophies']:,}",inline=True)
-        if not showdownwarning:
-            rank = "<:tranknone:1134890614635372675>"
-            rlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
-            index2 = 0
-            #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
-            #         -  600         675                750                 800                  900           1000   1150    1250
-            for i in ranklist:
-                if ppscore < i:
-                    break
-                else:
-                    rank = rlist[index2]
-                    index2 += 1
-            with open("tsr_best.json") as f:
-                try:
-                    besttsrdict = json.load(f)
-                    besttsr = besttsrdict[tag_element]
-                except Exception as e:
-                    besttsr = 0
-            with open("tsr_best.json") as f:
-                besttsrdict = json.load(f)
         
-            if besttsr < ppscore:
-                besttsr = ppscore
-                besttsrdict[tag_element] = besttsr
-                with open("tsr_best.json","w") as f:
-                    json.dump(besttsrdict,f)
-            with open("bs_ar.json") as f:
-                try:
-                    ar = json.load(f)[tag_element.upper()]
-                except:
-                    ar = "---"
-            embed.add_field(name=f"{rank} | {ppscore:,} TSR (Best: {besttsr:,})",value=f"AR: {ar}",inline=True)
-        if showdownwarning:
-            embed.add_field(name=f"<:warning:1229332347086704661> High SD/3v3 Win-Ratio",value=f"No Advanced Stats calculated.",inline=True)
-        if tag[0] in ["#8VGY00G9"]:
-            if tag[0] == "#8VGY00G9":
-                embed.add_field(name=f"<:goldstar:1153418516205162577> SHENZHIA DEVELOPER",value=f" ",inline=False)
-        elif tag[0] in bs_leaderboard_data:
-            if bs_leaderboard_data.index(tag[0])+1 < 11:
-                icon = "<:goldstar:1153418516205162577> "
-            elif bs_leaderboard_data.index(tag[0])+1 < 51:
-                icon = "<:silverstar:1153418444486758513> "
-            else:
-                icon = "<:bronzestar:1153418350970536007> "
-            embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
-        elif tag[0] in bs_guild_leaderboard_data[:9]:
-            if bs_guild_leaderboard_data.index(tag[0])+1 == 1:
-                icon = "<:goldstar:1153418516205162577> "
-            elif bs_guild_leaderboard_data.index(tag[0])+1 == 2:
-                icon = "<:silverstar:1153418444486758513> "
-            elif bs_guild_leaderboard_data.index(tag[0])+1 == 3:
-                icon = "<:bronzestar:1153418350970536007> "
-            else:
-                icon = ""
-            embed.add_field(name=f"{icon}#{bs_guild_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
-        else:
-            embed.add_field(name=f"---",value=f" ",inline=False)
-        while len(pplist_b) < (12 if not extend else 18):
-            pplist_b.append("-")
-        for i in range(9 if not extend else 18):
-            if not showdownwarning:
-                tsr_display = f"{pplist_b[i]:,} tsr ({round(pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]),2) if pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]) < 100 else 100}%)" if pplist_b[i] != "-" else "-"
-                try:
-                    tsr_val = round(pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]),2) if pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]) < 100 else 100
-                except:
-                    tsr_val = 0
-            else:
-                tsr_display = ""
-                tsr_val = -1
-            nl = "\n"
-            debug_ext = ""
-            lock_brawler_overview = False
-            try:
-                bname = brawlerlist[i]['name'].upper()
-            except:
-                bname = "Unknown"
-                lock_brawler_overview = True
-            if not lock_brawler_overview:
-                try:
-                    gadgetindicator = "<:gadget:1228965764631892069>" if len(brawlerlist[i]["gadgets"]) > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{debug_ext}",inline=True)
-                except Exception as e:
-                    embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
-                    print(f"{e} : {str(e)}")
-        if lock_brawler_overview:
-            embed.add_field(name=f"API DEFUNCT",value=f"<:warning:1229332347086704661> Invalid data recieved. Can't display brawler data. ;-;",inline=False)
         if len(brawlerlist) >= 10:
             performancelist = []
             for i in range(len(brawlerlist)):
@@ -1119,6 +1032,145 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                         pl_saves = json.dump(pl_saves,f)
         except:
             nolog = True
+        if not showdownwarning:
+            rank = "<:tranknone:1134890614635372675>"
+            rlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
+            index2 = 0
+            #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
+            #         -  600         675                750                 800                  900           1000   1150    1250
+            for i in ranklist:
+                if ppscore < i:
+                    break
+                else:
+                    rank = rlist[index2]
+                    index2 += 1
+            with open("tsr_best.json") as f:
+                try:
+                    besttsrdict = json.load(f)
+                    besttsr = besttsrdict[tag_element]
+                except Exception as e:
+                    besttsr = 0
+            with open("tsr_best.json") as f:
+                besttsrdict = json.load(f)
+            if besttsr < ppscore:
+                besttsr = ppscore
+                besttsrdict[tag_element] = besttsr
+                with open("tsr_best.json","w") as f:
+                    json.dump(besttsrdict,f)
+            with open("bs_ar_supplementary.json","r") as f:
+                ars = json.load(f)
+                ars[tag_element] = {"sdr":int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100),"abt":int(round(averagetrophies,0)) if averagetrophies != 'N/A' else -1}
+            with open("bs_ar_supplementary.json","w") as f:
+                json.dump(ars,f)
+            try:
+                with open("bs_powerleague.json") as f:
+                    ranked = json.load(f)
+                with open("bs_ar_supplementary.json") as f:
+                    extra = json.load(f)
+                with open("tsr_best.json") as f:
+                    tsr = json.load(f)
+                arscore = 0
+                #ranked
+                if tag_element in ranked:
+                    arscore += ranked[tag_element]["best"]
+                else:
+                    pass
+                #tsr
+                if tag_element in tsr:
+                    tsrscore = 0
+                    for i in ranklist:
+                        if tsr[tag_element] < i:
+                            break
+                        else:
+                            tsrscore += 1
+                    arscore += tsrscore
+                else:
+                    pass
+                #sdr
+                if tag_element in extra:
+                    arscore += int(abs(extra[tag_element]["sdr"]-100)/10)
+                else:
+                    pass
+                #abt
+                if tag_element in extra:
+                    if extra[tag_element]["abt"] != -1:
+                        j = extra[tag_element]["abt"] - 500
+                        if j < 0:
+                            j = 0
+                        abt_tsr = int(round(1.7777777*((j if j < 750 else 750)**2),0))
+                        tsrscore = 0
+                        for i in ranklist:
+                            if abt_tsr < i:
+                                break
+                            else:
+                                tsrscore += 1
+                        arscore += int(tsrscore / 2)
+                    else:
+                        pass
+                else:
+                    pass
+            except Exception as e:
+                arscore = "---"
+                print(traceback.format_exc())
+            embed.add_field(name=f"{rank} | {ppscore:,} TSR (Best: {besttsr:,})",value=f"AR: {arscore}",inline=True)
+        if showdownwarning:
+            embed.add_field(name=f"<:warning:1229332347086704661> High SD/3v3 Win-Ratio",value=f"No Advanced Stats calculated.",inline=True)
+        if tag[0] in ["#8VGY00G9"]:
+            if tag[0] == "#8VGY00G9":
+                embed.add_field(name=f"<:goldstar:1153418516205162577> SHENZHIA DEVELOPER",value=f" ",inline=False)
+        elif tag[0] in bs_leaderboard_data:
+            if bs_leaderboard_data.index(tag[0])+1 < 11:
+                icon = "<:goldstar:1153418516205162577> "
+            elif bs_leaderboard_data.index(tag[0])+1 < 51:
+                icon = "<:silverstar:1153418444486758513> "
+            else:
+                icon = "<:bronzestar:1153418350970536007> "
+            embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
+        elif tag[0] in bs_guild_leaderboard_data[:9]:
+            if bs_guild_leaderboard_data.index(tag[0])+1 == 1:
+                icon = "<:goldstar:1153418516205162577> "
+            elif bs_guild_leaderboard_data.index(tag[0])+1 == 2:
+                icon = "<:silverstar:1153418444486758513> "
+            elif bs_guild_leaderboard_data.index(tag[0])+1 == 3:
+                icon = "<:bronzestar:1153418350970536007> "
+            else:
+                icon = ""
+            embed.add_field(name=f"{icon}#{bs_guild_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
+        else:
+            embed.add_field(name=f"---",value=f" ",inline=False)
+        while len(pplist_b) < (12 if not extend else 18):
+            pplist_b.append("-")
+        for i in range(9 if not extend else 18):
+            if not showdownwarning:
+                tsr_display = f"{pplist_b[i]:,} tsr ({round(pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]),2) if pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]) < 100 else 100}%)" if pplist_b[i] != "-" else "-"
+                try:
+                    tsr_val = round(pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]),2) if pplist_b[i]/(10000/[4,8,8,8,8,16,16,16,16,1,1,1,1,1,1,1,1,1][i]) < 100 else 100
+                except:
+                    tsr_val = 0
+            else:
+                tsr_display = ""
+                tsr_val = -1
+            nl = "\n"
+            debug_ext = ""
+            lock_brawler_overview = False
+            try:
+                bname = brawlerlist[i]['name'].upper()
+            except:
+                bname = "Unknown"
+                lock_brawler_overview = True
+            if not lock_brawler_overview:
+                try:
+                    gadgetindicator = "<:gadget:1228965764631892069>" if len(brawlerlist[i]["gadgets"]) > 0 else "<:no_util:1228965782390702201>"
+                    spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
+                    gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
+                    gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{debug_ext}",inline=True)
+                except Exception as e:
+                    embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
+                    print(f"{e} : {str(e)}")
+        if lock_brawler_overview:
+            embed.add_field(name=f"API DEFUNCT",value=f"<:warning:1229332347086704661> Invalid data recieved. Can't display brawler data. ;-;",inline=False)
+        
         fluc_list = []
         try:
             for i in bsdict[tag_element]["history"]:
@@ -1169,11 +1221,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             asyc = "---"
         embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2)}%",inline=False)
-        with open("bs_ar_supplementary.json","r") as f:
-            ars = json.load(f)
-            ars[tag_element] = {"sdr":int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100),"abt":int(round(averagetrophies,0)) if averagetrophies != 'N/A' else -1}
-        with open("bs_ar_supplementary.json","w") as f:
-            json.dump(ars,f)
         if str(ctx.author_id) not in tags:
             embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embeds.append(embed)
