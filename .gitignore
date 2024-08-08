@@ -4,3 +4,4 @@ graphs/*
 *.json
 *.txt
 !requirements.txt
+Thumbs.db

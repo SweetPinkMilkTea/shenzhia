@@ -29,6 +29,7 @@ import time, datetime
 import aiohttp
 import sentry_sdk
 import traceback
+import urllib, requests
 from interactions.api.events import CommandError
 
 with open("bs_api_token.json") as f:
