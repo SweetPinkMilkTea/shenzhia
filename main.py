@@ -26,15 +26,10 @@ import interactions
 from interactions.ext.paginators import Paginator
 import json
 import time, datetime
-import urllib, requests
 import aiohttp
 import sentry_sdk
 import traceback
 from interactions.api.events import CommandError
-
-if instance != "rasp":
-    import openai
-    client = openai.OpenAI(api_key = "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")
 
 with open("bs_api_token.json") as f:
     bs_api_token = json.load(f)["main" if instance != "pt-tek" else "alt"]

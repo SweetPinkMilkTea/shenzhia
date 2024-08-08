@@ -1,3 +1,6 @@
 /archived code/
 graphs/*
 !graphs/
+*.json
+*.txt
+!requirements.txt
