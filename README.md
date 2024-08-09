@@ -9,6 +9,8 @@ Additionally, it can save and work with received data to further utilize API dat
 
 # Set-up
 - Clone the repo into the directory of your choice
+- `cd` into the directory
+- Create a venv with `python -m venv .venv` and activate it with `.venv\Scripts\activate.bat` / `source .venv/bin/activate`
 - Install the requirements via `pip install -r requirements.txt`
 - Get a Discord Bot Token via their [Developer Platform](https://discord.com/developers)
-- Start `main.py`
+- Start `main.py` and follow any instructions that may occur
