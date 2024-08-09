@@ -60,14 +60,17 @@ if not all(x in os.listdir() for x in req_files):
         d = input("Channel-ID: ")
         json.dump({a:b,c:d},f)
 
-instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
-instance = "main" if instance == "1" else "dev"
-
 # Fast Login
 # Provide a non-empty string to auto-pick a saved bot token
 # Useful if working with "headless" hardware
 with open("fastlogin.json") as f:
     fastlogin = json.load(f)["name"]
+
+if fastlogin == "":
+    instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
+    instance = "main" if instance == "1" else "dev"
+else:
+    instance = "dev"
 
 print("\033c",end="")
 
@@ -112,6 +115,7 @@ if fastlogin == "":
             login = a
 else:
     choice = fastlogin
+    print("Fastlogin is active!")
 login = choice
 if choice not in discord_bot_token.keys():
     sys.exit("Invalid bot token key.")
