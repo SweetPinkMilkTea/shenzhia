@@ -21,7 +21,7 @@ Shenzhia needs additional resources outside of python related to you. These cons
 - A Discord Bot Token via [Discords Developer Platform](https://discord.com/developers)
 - A Brawl Stars API Token via their [Webpage](https://developer.brawlstars.com/#/)
 > [!NOTE]
-> The API requires your IP. If your IP changes, you have to regenerate your key. 
+> The API requires your bot host's IP. If it's IP changes, you have to regenerate your key. 
 >
 > Shenzhia will notify you either when starting the bot or if a request fails because of this.
 
@@ -42,7 +42,7 @@ Shenzhia needs additional resources outside of python related to you. These cons
 > v3.12 and above had issues with installing requirements.
 - Clone the repo into the directory of your choice
 - `cd` into the directory
-- Create a venv with `python -m venv .venv` and activate it with `.venv\Scripts\activate.bat` / `source .venv/bin/activate`
+- Create a venv with `python -m venv .venv` and activate it with `.venv\Scripts\activate.bat` (Windows) / `source .venv/bin/activate` (Mac/Linux)
 - Install the requirements via `pip install -r requirements.txt`
 - Start `main.py` and follow any instructions that may occur (see next section)
 
