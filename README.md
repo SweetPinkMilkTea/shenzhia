@@ -9,13 +9,13 @@ It's use is communicating with the Brawl Stars API and displaying data to the re
 Additionally, it can save and work with received data to further utilize API data.
 
 # Additional Requirements
-Shenzhia needs additional resources outside of python related to you. These consist off:
+Shenzhia needs additional resources outside of python related to you. These consist of:
 - A Discord Bot Token via [Discords Developer Platform](https://discord.com/developers)
 - A Brawl Stars API Token via their [Webpage](https://developer.brawlstars.com/#/)
 > [!NOTE]
 > The API requires your IP. If your IP changes, you have to regenerate your key. 
 >
-> Shenzhia will notify you either when starting the bot or if a request fails.
+> Shenzhia will notify you either when starting the bot or if a request fails because of this.
 
 - A Sentry DSN for capturing any exceptions that may occur. Create a new project [on their site](https://sentry.io) and select *Python*. Skip the Framework selection and just copy the string shown after `dsn=`.
 
