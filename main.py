@@ -19,11 +19,12 @@ import urllib, requests
 from interactions.api.events import CommandError
 
 # First Setup
-req_files = ["bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+req_files = ["loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
 if not all(x in req_files for x in os.listdir()):
     for i in req_files:
-        with open(i,"w") as f:
-            json.dump({},f)
+        if i not in os.listdir():
+            with open(i,"w") as f:
+                json.dump({},f)
     with open("dc_bot_tokens.json","w") as f:
         print("Discord Bottoken Setup\n---")
         a = ""
@@ -45,6 +46,14 @@ if not all(x in req_files for x in os.listdir()):
         a = "main"
         b = input("Key: ")
         json.dump({a:b},f)
+    with open("dev_env.json","w") as f:
+        print(f"\nChannel for logging purposes\nChange this by modifying 'dev_env.json'\n---")
+        a = "loggingchannel"
+        b = input("Channel-ID: ")
+        print(f"\nServer for scoped commands\nChange this by modifying 'dev_env.json'\n---")
+        c = "scopedguild"
+        d = input("Channel-ID: ")
+        json.dump({a:b,c:d},f)
 
 instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
 instance = "main" if instance == "1" else "dev"
@@ -66,9 +75,12 @@ with open("verbose_silence.json") as f:
         silence = 0
 with open("polling.json") as f:
     polling = json.load(f)
+with open("dev_env.json") as f:
+    logger = int(json.load(f)["loggingchannel"])
+    scope = int(json.load(f)["scopedguild"])
 tsr_rank_thresholds = [1,17778,36111,54444,73333,92222,111111,127407,143703,160000,201481,242962,284444,364444,444444,751111,1000000,999999999]
 
-print("\033cSelect Discord Login:\nEnter nothing to create new or edit.\n\n")
+print("\033cSelect Discord Login:\nEnter nothing to create a new one or edit one.\n\n")
 for i in discord_bot_token:
     print(f"[{i}]")
 print()
@@ -200,7 +212,7 @@ async def on_startup():
             await ar_refresh()
     except:
         print("Task error!")
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"<:qito_connected:1140550294313373766> Bot has started/resumed.")
     exitcode = 0
@@ -215,7 +227,7 @@ async def check_trophies():
     global bsdict
     with open("bs_data.json") as f:
         bsdict = json.load(f)
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     try:
         with open("dc_id_rel.json") as f:
             namerel = json.load(f)
@@ -249,7 +261,7 @@ async def check_trophies():
                             try:
                                 print(data["reason"])
                                 #Send error to dev channel and stop task
-                                channel = bot.get_channel(1028719425035178016)
+                                channel = bot.get_channel(logger)
                                 await channel.send(f"<:qito_error:1137124869713166416> Auto-Request failed! Task was abandoned.\n\nReason: {data['reason']}")
                                 return
                             except:
@@ -282,7 +294,7 @@ async def check_trophies():
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
     # Send success message to dev channel
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"Auto-Request completed. {'' if not errors else str(errors)+' errors encountered.'}", silent=True)
 
@@ -338,7 +350,7 @@ async def bs_player_leaderboard():
     try:
         print(data["reason"])
         #Send error to dev channel and stop task
-        channel = bot.get_channel(1028719425035178016)
+        channel = bot.get_channel(logger)
         await channel.send(f"<:qito_error:1137124869713166416> Leaderboard data request failed! Task was abandoned.\n\nReason: {data['message']}")
         return
     except:
@@ -346,7 +358,7 @@ async def bs_player_leaderboard():
     bs_leaderboard_data = []
     for i in data["items"]:
         bs_leaderboard_data.append(i["tag"])
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     # guild
     bs_guild_leaderboard_data_temp = []
     with open("bs_tags.json","r") as f:
@@ -441,7 +453,7 @@ async def ar_refresh():
 
     with open("bs_ar.json","w") as f:
         json.dump(ar,f)
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"AR compiled.",silent=True)
     print("AR updated.")
@@ -451,7 +463,7 @@ async def ar_refresh():
 # LOCAL SCOPE ONLY 
 # ------------------------
 
-@interactions.slash_command(name="say", description="Send a message somewhere as Shen", scopes=[647539435117740043])
+@interactions.slash_command(name="say", description="Send a message somewhere as Shen", scopes=[scope])
 @interactions.slash_option(name="content", description="The message. Use links for embeds or Discord Objects (as <...>)", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="channel", description="Where to send (ID).", required=True, opt_type=interactions.OptionType.STRING)
 async def say(ctx: interactions.SlashContext, content: str, channel: str):
@@ -463,7 +475,7 @@ async def say(ctx: interactions.SlashContext, content: str, channel: str):
     except Exception as e:
         await ctx.send(f"An error occured.\n{e} : {str(e)}")
 
-@interactions.slash_command(name="close", description="Quit the current session.", scopes=[647539435117740043])
+@interactions.slash_command(name="close", description="Quit the current session.", scopes=[scope])
 @interactions.slash_option(name="quick_restart", description="Whether to skip autosync - Only use this when debugging.", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def close(ctx: interactions.SlashContext, quick_restart: bool = False):
     exitcode = 0 if not quick_restart else 1
@@ -473,7 +485,7 @@ async def close(ctx: interactions.SlashContext, quick_restart: bool = False):
     await ctx.send("Session closing.")
     await bot.stop()
 
-@interactions.slash_command(name="tokenswitch", description="Overwrite the API-Key used to communicate with the Supercell API.", scopes=[647539435117740043])
+@interactions.slash_command(name="tokenswitch", description="Overwrite the API-Key used to communicate with the Supercell API.", scopes=[scope])
 @interactions.slash_option(name="new_key", description="The new API key received by the developer portal", required=True, opt_type=interactions.OptionType.STRING)
 async def tokenswitch(ctx: interactions.SlashContext, new_key: str):
     await ctx.defer()
@@ -486,28 +498,11 @@ async def tokenswitch(ctx: interactions.SlashContext, new_key: str):
         json.dump(tokendict,f) 
     await ctx.send("API Token overwritten.")
 
-@interactions.slash_command(name="ip", description="Get the current IPv4-Address used by the current instance host device.", scopes=[647539435117740043])
+@interactions.slash_command(name="ip", description="Get the current IPv4-Address used by the current instance host device.", scopes=[scope])
 async def ip(ctx: interactions.SlashContext):
     await ctx.send(urllib.request.urlopen('https://api4.ipify.org').read().decode('utf8'))
 
-@interactions.slash_command(name="clubcount", description="Show vacant slots of the club.", scopes=[647539435117740043,1059810441074856048])
-async def clubcount(ctx: interactions.SlashContext):
-    await ctx.defer()
-    tag = "#2JVV90YQ0"
-    tag = urllib.parse.quote(tag)
-    url = f"https://api.brawlstars.com/v1/clubs/{tag}/members"
-
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {bs_api_token}"
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            data = await response.json()
-    await ctx.send(f"{-1*(len(data['items'])-30)} open spot(s)",ephemeral=True)
-
-@interactions.slash_command(name="linknames", description="Save username-id relations to archive", scopes=[647539435117740043])
+@interactions.slash_command(name="linknames", description="Save username-id relations to archive", scopes=[scope])
 async def linknames(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_tags.json") as f:
@@ -523,7 +518,7 @@ async def linknames(ctx: interactions.SlashContext):
         json.dump(name_dict,f)
     await ctx.send(f"Done.",ephemeral=True)
 
-@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Only use on season switch.", scopes=[647539435117740043])
+@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Only use on season switch.", scopes=[scope])
 async def reset_ranked_elo(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_powerleague.json") as f:
@@ -534,7 +529,7 @@ async def reset_ranked_elo(ctx: interactions.SlashContext):
         json.dump(pl_saves,f)
     ctx.send("Completed.")
 
-@interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[647539435117740043])
+@interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[scope])
 @interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="listdir", description="Instead of sending a resource, list items in subdirectory", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def export(ctx: interactions.SlashContext, listdir: bool = False, query: str = ""):
@@ -556,11 +551,11 @@ async def export(ctx: interactions.SlashContext, listdir: bool = False, query: s
             await ctx.send("<:warning:1229332347086704661> Resource does not exist. Typo?")
             return
 
-@interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[647539435117740043])
+@interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[scope])
 async def raiseerror(ctx: interactions.SlashContext):
     raise ManualRaisedException("This Exception was forced manually.")
 
-@interactions.slash_command(name="silenceverbose", description="Mute the periodic task output for a set amount to time", scopes=[647539435117740043])
+@interactions.slash_command(name="silenceverbose", description="Mute the periodic task output for a set amount to time", scopes=[scope])
 @interactions.slash_option(name="duration", description="Amount of minutes to mute for. Set to 0 to remove any currently active silence.", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0)
 async def silenceverbose(ctx: interactions.SlashContext, duration: int):
     global silence
@@ -577,7 +572,7 @@ async def silenceverbose(ctx: interactions.SlashContext, duration: int):
         json.dump(silence,f)
     silence = silence["dur"]
     
-@interactions.slash_command(name="forcerefresh", description="Instantly rerun a task.", scopes=[647539435117740043])
+@interactions.slash_command(name="forcerefresh", description="Instantly rerun a task.", scopes=[scope])
 @interactions.slash_option(name="subject", description="Task to push", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="AutoSync",value="AS"),interactions.SlashCommandChoice(name="Leaderboard (Player)",value="LBp"),interactions.SlashCommandChoice(name="AR Compilation",value="AR")])
 async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     await ctx.defer()
@@ -589,7 +584,7 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     elif subject == "AR":
         await ar_refresh()
 
-@interactions.slash_command(name="reloadjson", description="Reload all .json files loaded on startup", scopes=[647539435117740043])
+@interactions.slash_command(name="reloadjson", description="Reload all .json files loaded on startup", scopes=[scope])
 async def reloadjson(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_api_token.json") as f:
@@ -604,7 +599,7 @@ async def reloadjson(ctx: interactions.SlashContext):
         polling = json.load(f)
     await ctx.send("Done.")
 
-@interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[647539435117740043])
+@interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[scope])
 async def paginatortest(ctx: interactions.SlashContext):
     embeds = []
     for i in range(5):
@@ -614,7 +609,7 @@ async def paginatortest(ctx: interactions.SlashContext):
     paginator.callback = test()
     await paginator.send(ctx)
 
-@interactions.slash_command(name="asyncdelay", description="Testing async", scopes=[647539435117740043])
+@interactions.slash_command(name="asyncdelay", description="Testing async", scopes=[scope])
 async def asyncdelay(ctx: interactions.SlashContext):
     await ctx.send("Delaying...")
     await asyncio.sleep(10)
