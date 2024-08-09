@@ -2,20 +2,6 @@ import os, sys
 import random
 import asyncio
 
-# THIS DISABLES ALL PRINTING - DISABLE IN DEBUGGING
-# sys.stdout = open(os.devnull, 'w')
-
-#print(os.getcwd())
-if os.getcwd()[0] == "/":
-    instance = "rasp"
-    os.chdir("/mnt/NikitaSyn/shenzhia")
-    sys.path.append('/home/admin/.local/lib/python3.10/site-packages')
-else:
-    if "shenzhitek" in os.getcwd():
-        instance = "pt-tek"
-    else:
-        instance = "desk"
-
 class ManualRaisedException(Exception):
     pass
 class APIConnectionException(Exception):
@@ -32,17 +18,104 @@ import traceback
 import urllib, requests
 from interactions.api.events import CommandError
 
+# First Setup
+req_files = ["fastlogin.json","loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+if not all(x in os.listdir() for x in req_files):
+    for i in req_files:
+        if i not in os.listdir():
+            with open(i,"w") as f:
+                print(f"Generated new file: {i}")
+                if i == "fastlogin.json":
+                    json.dump({"name":""},f)
+                else:
+                    json.dump({},f)
+    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again.")
+    with open("dc_bot_tokens.json","w") as f:
+        print("Discord Bottoken Setup\n---")
+        a = ""
+        while a == "":
+            a = input("Name: ").strip()
+        b = input("Key: ")
+        json.dump({a:b},f)
+    with open("bs_api_token.json","w") as f:
+        print(f"\nBrawl Stars API Token Setup\nYour IP is [{urllib.request.urlopen('https://api4.ipify.org').read().decode('utf8')}]\n---")
+        a = ""
+        while a == "":
+            # Static for now
+            # a = input("Name: ").strip()
+            a = "main"
+        b = input("Key: ")
+        json.dump({a:b},f)
+    with open("sentry_dsn.json","w") as f:
+        print(f"\nSentry DSN\n---")
+        a = "main"
+        b = input("Key: ")
+        json.dump({a:b},f)
+    with open("dev_env.json","w") as f:
+        print(f"\nChannel for logging purposes\nChange this by modifying 'dev_env.json'\n---")
+        a = "loggingchannel"
+        b = input("Channel-ID: ")
+        print(f"\nServer for administrative commands\nChange this by modifying 'dev_env.json'\n---")
+        c = "scopedguild"
+        d = input("Channel-ID: ")
+        json.dump({a:b,c:d},f)
+
+instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
+instance = "main" if instance == "1" else "dev"
+
+# Fast Login
+# Provide a non-empty string to auto-pick a saved bot token
+# Useful if working with "headless" hardware
+with open("fastlogin.json") as f:
+    fastlogin = json.load(f)["name"]
+
+print("\033c",end="")
+
 with open("bs_api_token.json") as f:
-    bs_api_token = json.load(f)["main" if instance != "pt-tek" else "alt"]
+    bs_api_token = json.load(f)
+    # Make dynamic someday maybe
+    bs_api_token = bs_api_token["main"]
 with open("dc_bot_tokens.json") as f:
-    discord_bot_token = json.load(f)["main" if instance != "pt-tek" else "alt"]
+    discord_bot_token = json.load(f)
 with open("sentry_dsn.json") as f:
-    dsn = json.load(f)["main" if instance != "pt-tek" else "alt"]
+    dsn = json.load(f)["main"]
 with open("verbose_silence.json") as f:
-    silence = json.load(f)["dur"]
+    try:
+        silence = json.load(f)["dur"]
+    except:
+        silence = 0
 with open("polling.json") as f:
     polling = json.load(f)
-ranklist = [1,17778,36111,54444,73333,92222,111111,127407,143703,160000,201481,242962,284444,364444,444444,751111,1000000,999999999]
+with open("dev_env.json") as f:
+    dev_env = json.load(f)
+    logger = int(dev_env["loggingchannel"])
+    scope = int(dev_env["scopedguild"])
+tsr_rank_thresholds = [1,17778,36111,54444,73333,92222,111111,127407,143703,160000,201481,242962,284444,364444,444444,751111,1000000,999999999]
+
+if fastlogin == "":
+    print("\033cSelect Discord Login:\nEnter nothing to create a new one or edit one.\n\n")
+    for i in discord_bot_token:
+        print(f"[{i}]")
+    print()
+    choice = input().strip()
+    if choice == "":
+        with open("dc_bot_tokens.json","r") as f:
+            discord_bot_token = json.load()
+        with open("dc_bot_tokens.json","w") as f:
+            print("Discord Bottoken Setup\n---")
+            a = ""
+            while a == "":
+                a = input("Name: ").strip()
+            b = input("Key: ")
+            discord_bot_token[a] = b
+            json.dump(discord_bot_token,f)
+            login = a
+else:
+    choice = fastlogin
+login = choice
+if choice not in discord_bot_token.keys():
+    sys.exit("Invalid bot token key.")
+
 
 while True:
     url = f"https://api.brawlstars.com/v1/brawlers/"
@@ -74,10 +147,10 @@ while True:
             raise Exception()
         print(data["reason"])
         print(urllib.request.urlopen('https://api4.ipify.org').read().decode('utf8'))
-        bs_api_token = input("REPLACE TOKEN > ")
+        bs_api_token = input("Key seems expired - Enter a new one: ")
         with open("bs_api_token.json", "r") as f:
             bs_api_dict = json.load(f)
-        bs_api_dict["main" if instance != "pt-tek" else "alt"] = bs_api_token
+        bs_api_dict["main"] = bs_api_token
         with open("bs_api_token.json", "w") as f:
             json.dump(bs_api_dict,f)
     except:
@@ -104,7 +177,7 @@ powericonlist = ["<:1:1228965645262258207>","<:2:1228965679122743379>","<:3:1228
 
 def send_api_error(reason):
     if "accessDenied" in reason:
-        return f"<:qito_error:1137124869713166416> The current API tag for the BS-API is outdated. This will likely be fixed in up to a few hours."
+        return f"<:qito_error:1137124869713166416> The current API key for the BS-API is outdated. Please wait for a fix."
     elif reason == "inMaintenance":
         return"<:qito_error:1137124869713166416> BS API under Maintenance. Please wait until it's over, this often only takes a few minutes."
     elif reason == "notFound":
@@ -114,17 +187,17 @@ def send_api_error(reason):
 
 
 startuptime = int(time.time())
-bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False if not instance == "pt-tek" else True)
-if instance != "pt-tek":
+bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False if not instance == "dev" else True)
+if instance != "dev":
     bot.load_extension('interactions.ext.sentry', token=dsn)
 
 @interactions.listen(CommandError, disable_default_listeners=False)
 async def on_command_error(event: CommandError):
     traceback.print_exception(event.error)
-    embed = interactions.Embed(title=random.choice(["Yikes!","Ouch...","Aw...","Oops."]),
+    embed = interactions.Embed(title=random.choice(["Yikes!","Ouch...","Aw...","Oops.",":("]),
                         color=0xff0000,
                         timestamp=datetime.datetime.now(),
-                        description=f"An unexpected error occured.\nAn error log was generated and sent to Qi.")
+                        description=f"An unexpected error occured.\nAn error log was generated and sent internally.")
     if not event.ctx.responded:
         await event.ctx.send(embed=embed)
 
@@ -143,17 +216,15 @@ async def on_startup():
     print(f'\nStarted Session as [{bot.user}] on code [{exitcode}]')
     try:
         check_trophies.start()
-        check_club.start()
         bs_player_leaderboard.start()
         ar_refresh.start()
-        await check_club()
         await bs_player_leaderboard()
         if exitcode == 0:
             await check_trophies()
             await ar_refresh()
     except:
         print("Task error!")
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"<:qito_connected:1140550294313373766> Bot has started/resumed.")
     exitcode = 0
@@ -168,7 +239,7 @@ async def check_trophies():
     global bsdict
     with open("bs_data.json") as f:
         bsdict = json.load(f)
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     try:
         with open("dc_id_rel.json") as f:
             namerel = json.load(f)
@@ -202,7 +273,7 @@ async def check_trophies():
                             try:
                                 print(data["reason"])
                                 #Send error to dev channel and stop task
-                                channel = bot.get_channel(1028719425035178016)
+                                channel = bot.get_channel(logger)
                                 await channel.send(f"<:qito_error:1137124869713166416> Auto-Request failed! Task was abandoned.\n\nReason: {data['reason']}")
                                 return
                             except:
@@ -235,42 +306,9 @@ async def check_trophies():
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
     # Send success message to dev channel
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"Auto-Request completed. {'' if not errors else str(errors)+' errors encountered.'}", silent=True)
-
-@interactions.Task.create(interactions.IntervalTrigger(hours=1))
-async def check_club():
-    global clubmembercount
-    if instance != "pt-tek":
-        with open("bs_club_member_cache.json","r") as f:
-            clubmembercount = json.load(f)
-        tag = "#2JVV90YQ0"
-        tag = urllib.parse.quote(tag)
-        url = f"https://api.brawlstars.com/v1/clubs/{tag}/members"
-
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {bs_api_token}"
-        }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as response:
-                channel = await bot.fetch_channel(1059810979204051005)
-                if response.status != 200:
-                    print(f"Error with Club-Scan: err {response.status}")
-                    return
-                data = await response.json()
-                if len(data['items']) < 30 and len(data['items']) != clubmembercount["amount"]:
-                    await channel.send(f"<:warning:1229332347086704661> <@411823919436136458> Club not full: {len(data['items'])} members")
-                    print(f"Club-scan done with result [{True} - {len(data['items'])}].")
-                    clubmembercount = {"amount":len(data['items'])}
-                    with open("bs_club_member_cache.json","w") as f:
-                        json.dump(clubmembercount,f)
-                else:
-                    print(f"Club-scan done with result [{False} - {len(data['items'])}].")
-    else:
-        print("Development Instance - Club check skipped")
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=3))
 async def bs_player_leaderboard():
@@ -291,7 +329,7 @@ async def bs_player_leaderboard():
     try:
         print(data["reason"])
         #Send error to dev channel and stop task
-        channel = bot.get_channel(1028719425035178016)
+        channel = bot.get_channel(logger)
         await channel.send(f"<:qito_error:1137124869713166416> Leaderboard data request failed! Task was abandoned.\n\nReason: {data['message']}")
         return
     except:
@@ -299,7 +337,7 @@ async def bs_player_leaderboard():
     bs_leaderboard_data = []
     for i in data["items"]:
         bs_leaderboard_data.append(i["tag"])
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     # guild
     bs_guild_leaderboard_data_temp = []
     with open("bs_tags.json","r") as f:
@@ -358,7 +396,7 @@ async def ar_refresh():
         #tsr
         if tag in tsr:
             tsrscore = 0
-            for i in ranklist:
+            for i in tsr_rank_thresholds:
                 if tsr[tag] < i:
                     break
                 else:
@@ -379,7 +417,7 @@ async def ar_refresh():
                     j = 0
                 abt_tsr = int(round(1.7777777*((j if j < 750 else 750)**2),0))
                 tsrscore = 0
-                for i in ranklist:
+                for i in tsr_rank_thresholds:
                     if abt_tsr < i:
                         break
                     else:
@@ -394,7 +432,7 @@ async def ar_refresh():
 
     with open("bs_ar.json","w") as f:
         json.dump(ar,f)
-    channel = bot.get_channel(1028719425035178016)
+    channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"AR compiled.",silent=True)
     print("AR updated.")
@@ -404,7 +442,7 @@ async def ar_refresh():
 # LOCAL SCOPE ONLY 
 # ------------------------
 
-@interactions.slash_command(name="say", description="Send a message somewhere as Shen", scopes=[647539435117740043])
+@interactions.slash_command(name="say", description="Send a message somewhere as Shen", scopes=[scope])
 @interactions.slash_option(name="content", description="The message. Use links for embeds or Discord Objects (as <...>)", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="channel", description="Where to send (ID).", required=True, opt_type=interactions.OptionType.STRING)
 async def say(ctx: interactions.SlashContext, content: str, channel: str):
@@ -416,7 +454,7 @@ async def say(ctx: interactions.SlashContext, content: str, channel: str):
     except Exception as e:
         await ctx.send(f"An error occured.\n{e} : {str(e)}")
 
-@interactions.slash_command(name="close", description="Quit the current session.", scopes=[647539435117740043])
+@interactions.slash_command(name="close", description="Quit the current session.", scopes=[scope])
 @interactions.slash_option(name="quick_restart", description="Whether to skip autosync - Only use this when debugging.", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def close(ctx: interactions.SlashContext, quick_restart: bool = False):
     exitcode = 0 if not quick_restart else 1
@@ -426,7 +464,7 @@ async def close(ctx: interactions.SlashContext, quick_restart: bool = False):
     await ctx.send("Session closing.")
     await bot.stop()
 
-@interactions.slash_command(name="tokenswitch", description="Overwrite the API-Key used to communicate with the Supercell API.", scopes=[647539435117740043])
+@interactions.slash_command(name="tokenswitch", description="Overwrite the API-Key used to communicate with the Supercell API.", scopes=[scope])
 @interactions.slash_option(name="new_key", description="The new API key received by the developer portal", required=True, opt_type=interactions.OptionType.STRING)
 async def tokenswitch(ctx: interactions.SlashContext, new_key: str):
     await ctx.defer()
@@ -434,33 +472,16 @@ async def tokenswitch(ctx: interactions.SlashContext, new_key: str):
     bs_api_token = new_key
     with open("bs_api_token.json","r") as f:
         tokendict = json.load(f)
-        tokendict["alt" if instance == "pt-tek" else "main"] = bs_api_token
+        tokendict["alt" if instance == "dev" else "main"] = bs_api_token
     with open("bs_api_token.json","w") as f:
         json.dump(tokendict,f) 
     await ctx.send("API Token overwritten.")
 
-@interactions.slash_command(name="ip", description="Get the current IPv4-Address used by the current instance host device.", scopes=[647539435117740043])
+@interactions.slash_command(name="ip", description="Get the current IPv4-Address used by the current instance host device.", scopes=[scope])
 async def ip(ctx: interactions.SlashContext):
     await ctx.send(urllib.request.urlopen('https://api4.ipify.org').read().decode('utf8'))
 
-@interactions.slash_command(name="clubcount", description="Show vacant slots of the club.", scopes=[647539435117740043,1059810441074856048])
-async def clubcount(ctx: interactions.SlashContext):
-    await ctx.defer()
-    tag = "#2JVV90YQ0"
-    tag = urllib.parse.quote(tag)
-    url = f"https://api.brawlstars.com/v1/clubs/{tag}/members"
-
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {bs_api_token}"
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            data = await response.json()
-    await ctx.send(f"{-1*(len(data['items'])-30)} open spot(s)",ephemeral=True)
-
-@interactions.slash_command(name="linknames", description="Save username-id relations to archive", scopes=[647539435117740043])
+@interactions.slash_command(name="linknames", description="Save username-id relations to archive", scopes=[scope])
 async def linknames(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_tags.json") as f:
@@ -476,7 +497,7 @@ async def linknames(ctx: interactions.SlashContext):
         json.dump(name_dict,f)
     await ctx.send(f"Done.",ephemeral=True)
 
-@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Only use on season switch.", scopes=[647539435117740043])
+@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Only use on season switch.", scopes=[scope])
 async def reset_ranked_elo(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_powerleague.json") as f:
@@ -487,7 +508,7 @@ async def reset_ranked_elo(ctx: interactions.SlashContext):
         json.dump(pl_saves,f)
     ctx.send("Completed.")
 
-@interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[647539435117740043])
+@interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[scope])
 @interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="listdir", description="Instead of sending a resource, list items in subdirectory", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def export(ctx: interactions.SlashContext, listdir: bool = False, query: str = ""):
@@ -509,11 +530,11 @@ async def export(ctx: interactions.SlashContext, listdir: bool = False, query: s
             await ctx.send("<:warning:1229332347086704661> Resource does not exist. Typo?")
             return
 
-@interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[647539435117740043])
+@interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[scope])
 async def raiseerror(ctx: interactions.SlashContext):
     raise ManualRaisedException("This Exception was forced manually.")
 
-@interactions.slash_command(name="silenceverbose", description="Mute the periodic task output for a set amount to time", scopes=[647539435117740043])
+@interactions.slash_command(name="silenceverbose", description="Mute the periodic task output for a set amount to time", scopes=[scope])
 @interactions.slash_option(name="duration", description="Amount of minutes to mute for. Set to 0 to remove any currently active silence.", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0)
 async def silenceverbose(ctx: interactions.SlashContext, duration: int):
     global silence
@@ -530,7 +551,7 @@ async def silenceverbose(ctx: interactions.SlashContext, duration: int):
         json.dump(silence,f)
     silence = silence["dur"]
     
-@interactions.slash_command(name="forcerefresh", description="Instantly rerun a task.", scopes=[647539435117740043])
+@interactions.slash_command(name="forcerefresh", description="Instantly rerun a task.", scopes=[scope])
 @interactions.slash_option(name="subject", description="Task to push", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="AutoSync",value="AS"),interactions.SlashCommandChoice(name="Leaderboard (Player)",value="LBp"),interactions.SlashCommandChoice(name="AR Compilation",value="AR")])
 async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     await ctx.defer()
@@ -542,22 +563,22 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     elif subject == "AR":
         await ar_refresh()
 
-@interactions.slash_command(name="reloadjson", description="Reload all .json files loaded on startup", scopes=[647539435117740043])
+@interactions.slash_command(name="reloadjson", description="Reload all .json files loaded on startup", scopes=[scope])
 async def reloadjson(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_api_token.json") as f:
-        bs_api_token = json.load(f)["main" if instance != "pt-tek" else "alt"]
+        bs_api_token = json.load(f)["main" if instance != "dev" else "alt"]
     with open("dc_bot_tokens.json") as f:
-        discord_bot_token = json.load(f)["main" if instance != "pt-tek" else "alt"]
+        discord_bot_token = json.load(f)["main" if instance != "dev" else "alt"]
     with open("sentry_dsn.json") as f:
-        dsn = json.load(f)["main" if instance != "pt-tek" else "alt"]
+        dsn = json.load(f)["main" if instance != "dev" else "alt"]
     with open("verbose_silence.json") as f:
         silence = json.load(f)["dur"]
     with open("polling.json") as f:
         polling = json.load(f)
     await ctx.send("Done.")
 
-@interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[647539435117740043])
+@interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[scope])
 async def paginatortest(ctx: interactions.SlashContext):
     embeds = []
     for i in range(5):
@@ -567,7 +588,7 @@ async def paginatortest(ctx: interactions.SlashContext):
     paginator.callback = test()
     await paginator.send(ctx)
 
-@interactions.slash_command(name="asyncdelay", description="Testing async", scopes=[647539435117740043])
+@interactions.slash_command(name="asyncdelay", description="Testing async", scopes=[scope])
 async def asyncdelay(ctx: interactions.SlashContext):
     await ctx.send("Delaying...")
     await asyncio.sleep(10)
@@ -607,7 +628,7 @@ async def leaderboard(ctx: interactions.SlashContext):
         index2 = 0
         #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
         #         -  600         675                750                 800                  900           1000   1150    1250
-        for j in ranklist:
+        for j in tsr_rank_thresholds:
             if tsrbest[i] < j:
                 break
             else:
@@ -1038,7 +1059,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             index2 = 0
             #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
             #         -  600         675                750                 800                  900           1000   1150    1250
-            for i in ranklist:
+            for i in tsr_rank_thresholds:
                 if ppscore < i:
                     break
                 else:
@@ -1078,7 +1099,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 #tsr
                 if tag_element in tsr:
                     tsrscore = 0
-                    for i in ranklist:
+                    for i in tsr_rank_thresholds:
                         if tsr[tag_element] < i:
                             break
                         else:
@@ -1099,7 +1120,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                             j = 0
                         abt_tsr = int(round(1.7777777*((j if j < 750 else 750)**2),0))
                         tsrscore = 0
-                        for i in ranklist:
+                        for i in tsr_rank_thresholds:
                             if abt_tsr < i:
                                 break
                             else:
@@ -1501,7 +1522,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             rank = "<:tranknone:1134890614635372675>"
             rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
             index2 = 0
-            for k in ranklist:
+            for k in tsr_rank_thresholds:
                 if ppscore < k:
                     break
                 else:
@@ -1619,7 +1640,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     rank = "<:tranknone:1134890614635372675>"
                     rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
                     index2 = 0
-                    for l in ranklist:
+                    for l in tsr_rank_thresholds:
                         if ppscore < l:
                             break
                         else:
@@ -1745,7 +1766,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     rank = "<:tranknone:1134890614635372675>"
                     rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
                     index2 = 0
-                    for l in ranklist:
+                    for l in tsr_rank_thresholds:
                         if ppscore < l:
                             break
                         else:
@@ -1906,7 +1927,7 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
-    embed.add_field(name="Note for Instances",value=f"Certain functions might only be available on 'desk'.",inline=True)
+    embed.add_field(name="Note for Instances",value=f"Certain functions might only be available on 'main'.",inline=True)
     embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
     await ctx.send(embed=embed)
@@ -2168,4 +2189,4 @@ async def pollcallback(ctx: interactions.ComponentContext):
         json.dump(polling, f)
 
 
-bot.start(discord_bot_token)
+bot.start(discord_bot_token[login])
