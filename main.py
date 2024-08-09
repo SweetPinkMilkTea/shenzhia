@@ -19,12 +19,17 @@ import urllib, requests
 from interactions.api.events import CommandError
 
 # First Setup
-req_files = ["loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
-if not all(x in req_files for x in os.listdir()):
+req_files = ["fastlogin.json","loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
             with open(i,"w") as f:
-                json.dump({},f)
+                print(f"Generated new file: {i}")
+                if i == "fastlogin.json":
+                    json.dump({"name":""},f)
+                else:
+                    json.dump({},f)
+    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again.")
     with open("dc_bot_tokens.json","w") as f:
         print("Discord Bottoken Setup\n---")
         a = ""
@@ -50,13 +55,19 @@ if not all(x in req_files for x in os.listdir()):
         print(f"\nChannel for logging purposes\nChange this by modifying 'dev_env.json'\n---")
         a = "loggingchannel"
         b = input("Channel-ID: ")
-        print(f"\nServer for scoped commands\nChange this by modifying 'dev_env.json'\n---")
+        print(f"\nServer for administrative commands\nChange this by modifying 'dev_env.json'\n---")
         c = "scopedguild"
         d = input("Channel-ID: ")
         json.dump({a:b,c:d},f)
 
 instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
 instance = "main" if instance == "1" else "dev"
+
+# Fast Login
+# Provide a non-empty string to auto-pick a saved bot token
+# Useful if working with "headless" hardware
+with open("fastlogin.json") as f:
+    fastlogin = json.load(f)["name"]
 
 print("\033c",end="")
 
@@ -76,31 +87,34 @@ with open("verbose_silence.json") as f:
 with open("polling.json") as f:
     polling = json.load(f)
 with open("dev_env.json") as f:
-    logger = int(json.load(f)["loggingchannel"])
-    scope = int(json.load(f)["scopedguild"])
+    dev_env = json.load(f)
+    logger = int(dev_env["loggingchannel"])
+    scope = int(dev_env["scopedguild"])
 tsr_rank_thresholds = [1,17778,36111,54444,73333,92222,111111,127407,143703,160000,201481,242962,284444,364444,444444,751111,1000000,999999999]
 
-print("\033cSelect Discord Login:\nEnter nothing to create a new one or edit one.\n\n")
-for i in discord_bot_token:
-    print(f"[{i}]")
-print()
-choice = input().strip()
-if choice == "":
-    with open("dc_bot_tokens.json","r") as f:
-        discord_bot_token = json.load()
-    with open("dc_bot_tokens.json","w") as f:
-        print("Discord Bottoken Setup\n---")
-        a = ""
-        while a == "":
-            a = input("Name: ").strip()
-        b = input("Key: ")
-        discord_bot_token[a] = b
-        json.dump(discord_bot_token,f)
-        login = a
+if fastlogin == "":
+    print("\033cSelect Discord Login:\nEnter nothing to create a new one or edit one.\n\n")
+    for i in discord_bot_token:
+        print(f"[{i}]")
+    print()
+    choice = input().strip()
+    if choice == "":
+        with open("dc_bot_tokens.json","r") as f:
+            discord_bot_token = json.load()
+        with open("dc_bot_tokens.json","w") as f:
+            print("Discord Bottoken Setup\n---")
+            a = ""
+            while a == "":
+                a = input("Name: ").strip()
+            b = input("Key: ")
+            discord_bot_token[a] = b
+            json.dump(discord_bot_token,f)
+            login = a
 else:
-    login = choice
-    if choice not in discord_bot_token.keys():
-        sys.exit("Invalid key.")
+    choice = fastlogin
+login = choice
+if choice not in discord_bot_token.keys():
+    sys.exit("Invalid bot token key.")
 
 
 while True:
@@ -202,10 +216,8 @@ async def on_startup():
     print(f'\nStarted Session as [{bot.user}] on code [{exitcode}]')
     try:
         check_trophies.start()
-        check_club.start()
         bs_player_leaderboard.start()
         ar_refresh.start()
-        await check_club()
         await bs_player_leaderboard()
         if exitcode == 0:
             await check_trophies()
@@ -297,39 +309,6 @@ async def check_trophies():
     channel = bot.get_channel(logger)
     if silence <= time.time():
         await channel.send(f"Auto-Request completed. {'' if not errors else str(errors)+' errors encountered.'}", silent=True)
-
-@interactions.Task.create(interactions.IntervalTrigger(hours=1))
-async def check_club():
-    global clubmembercount
-    if instance != "dev":
-        with open("bs_club_member_cache.json","r") as f:
-            clubmembercount = json.load(f)
-        tag = "#2JVV90YQ0"
-        tag = urllib.parse.quote(tag)
-        url = f"https://api.brawlstars.com/v1/clubs/{tag}/members"
-
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {bs_api_token}"
-        }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as response:
-                channel = await bot.fetch_channel(1059810979204051005)
-                if response.status != 200:
-                    print(f"Error with Club-Scan: err {response.status}")
-                    return
-                data = await response.json()
-                if len(data['items']) < 30 and len(data['items']) != clubmembercount["amount"]:
-                    await channel.send(f"<:warning:1229332347086704661> <@411823919436136458> Club not full: {len(data['items'])} members")
-                    print(f"Club-scan done with result [{True} - {len(data['items'])}].")
-                    clubmembercount = {"amount":len(data['items'])}
-                    with open("bs_club_member_cache.json","w") as f:
-                        json.dump(clubmembercount,f)
-                else:
-                    print(f"Club-scan done with result [{False} - {len(data['items'])}].")
-    else:
-        print("Development Instance - Club check skipped")
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=3))
 async def bs_player_leaderboard():
