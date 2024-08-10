@@ -596,6 +596,28 @@ def test():
 # GLOBAL COMMANDS BELOW
 #---------------------------
 
+@interactions.slash_command(name="whois", description="Get linked tags for users of Shenzhia.")
+@interactions.slash_option(name="id", description="ID of the user in question", required=True, opt_type=interactions.OptionType.STRING)
+async def whois(ctx: interactions.SlashContext, id: str):
+    await ctx.defer()
+    with open("bs_tags.json") as f:
+        tags = json.load(f)
+    if id not in tags.keys():
+        await ctx.send("<:warning:1229332347086704661> Nothing found under this ID.")
+    else:
+        embed = interactions.Embed(title=f"LINKED PROFILES",
+                        color=0x6f07b4,
+                        timestamp=datetime.datetime.now())
+        for i in range(5):
+            try:
+                embed.add_field(name=f"[{i+1}] - {tags[id][i]}",value=f" ")
+            except:
+                pass
+        embed.set_footer(text="Shenzhia",
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+        await ctx.send(embed=embed)
+        return
+    
 @interactions.slash_command(name="leaderboard", description="Find the best Shenzhia users for brawlers or overall!")
 async def leaderboard(ctx: interactions.SlashContext):
     await ctx.defer()
