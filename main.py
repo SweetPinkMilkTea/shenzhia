@@ -66,12 +66,6 @@ if not all(x in os.listdir() for x in req_files):
 with open("fastlogin.json") as f:
     fastlogin = json.load(f)["name"]
 
-if fastlogin == "":
-    instance = input("\nSelect Mode:\n\n1 - 'main' (Full functionality)\n2 - 'dev' (Certain functions disabled)\n\n>  ")
-    instance = "main" if instance == "1" else "dev"
-else:
-    instance = "dev"
-
 print("\033c",end="")
 
 with open("bs_api_token.json") as f:
@@ -191,9 +185,8 @@ def send_api_error(reason):
 
 
 startuptime = int(time.time())
-bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False if not instance == "dev" else True)
-if instance != "dev":
-    bot.load_extension('interactions.ext.sentry', token=dsn)
+bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False)
+bot.load_extension('interactions.ext.sentry', token=dsn)
 
 @interactions.listen(CommandError, disable_default_listeners=False)
 async def on_command_error(event: CommandError):
@@ -476,7 +469,7 @@ async def tokenswitch(ctx: interactions.SlashContext, new_key: str):
     bs_api_token = new_key
     with open("bs_api_token.json","r") as f:
         tokendict = json.load(f)
-        tokendict["alt" if instance == "dev" else "main"] = bs_api_token
+        tokendict["main"] = bs_api_token
     with open("bs_api_token.json","w") as f:
         json.dump(tokendict,f) 
     await ctx.send("API Token overwritten.")
@@ -571,11 +564,9 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
 async def reloadjson(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_api_token.json") as f:
-        bs_api_token = json.load(f)["main" if instance != "dev" else "alt"]
-    with open("dc_bot_tokens.json") as f:
-        discord_bot_token = json.load(f)["main" if instance != "dev" else "alt"]
+        bs_api_token = json.load(f)["main"]
     with open("sentry_dsn.json") as f:
-        dsn = json.load(f)["main" if instance != "dev" else "alt"]
+        dsn = json.load(f)["main"]
     with open("verbose_silence.json") as f:
         silence = json.load(f)["dur"]
     with open("polling.json") as f:
@@ -1923,7 +1914,6 @@ async def status(ctx: interactions.SlashContext):
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
-    embed.add_field(name="Instance",value=f"'{instance}'",inline=True)
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="API-Node [Profile]",value=f"<:qito_error:1137124869713166416> [{response}]" if response != 200 else f"<:qito_connected:1140550294313373766> [{response}]",inline=True)
@@ -1931,7 +1921,6 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
-    embed.add_field(name="Note for Instances",value=f"Certain functions might only be available on 'main'.",inline=True)
     embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
     await ctx.send(embed=embed)
