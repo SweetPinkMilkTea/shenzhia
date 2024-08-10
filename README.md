@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Hello world! This readme is not complete yet.
+
 > [!CAUTION]
 > This bot is unfinished and in active development. Anything might be broken and be changed without notice.
 > 
