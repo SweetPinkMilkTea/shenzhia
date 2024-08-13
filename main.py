@@ -1919,9 +1919,9 @@ async def status(ctx: interactions.SlashContext):
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get(url, headers=headers) as response:
-                response = response.status
+                response_d = response.status
         except:
-            response = "Not reachable"
+            response_d = "Not reachable"
         try:
             async with session.get(url, headers=headers) as response:
                 response_b = response.status
@@ -1938,7 +1938,7 @@ async def status(ctx: interactions.SlashContext):
                         timestamp=datetime.datetime.now())
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="API-Node [Profile]",value=f"<:qito_error:1137124869713166416> [{response}]" if response != 200 else f"<:qito_connected:1140550294313373766> [{response}]",inline=True)
+    embed.add_field(name="API-Node [Profile]",value=f"<:qito_error:1137124869713166416> [{response_d}]" if response_d != 200 else f"<:qito_connected:1140550294313373766> [{response_d}]",inline=True)
     embed.add_field(name="API-Node [Battle-History]",value=f"<:qito_error:1137124869713166416> [{response_b}]" if response_b != 200 else f"<:qito_connected:1140550294313373766> [{response_b}]",inline=True)
     embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
