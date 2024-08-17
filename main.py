@@ -18,6 +18,21 @@ import traceback
 import urllib, requests
 from interactions.api.events import CommandError
 
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib import font_manager
+import matplotlib as mpl
+import numpy as np
+
+fm = mpl.font_manager
+fm._get_fontconfig_fonts.cache_clear()
+
+font_dir = ["./font"]  # The path to the custom font file.
+font_files = font_manager.findSystemFonts(font_dir)
+
+for font_file in font_files:
+    font_manager.fontManager.addfont(font_file)
+
 # First Setup
 req_files = ["fastlogin.json","loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
 if not all(x in os.listdir() for x in req_files):
@@ -1890,20 +1905,124 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                         json.dump(pl_saves,f)
     await ctx.send(embed=embed)
 
-@interactions.slash_command(name="history", description="View a recorded graph of your stat development. (Requires linked profile, only primary profile)")
-@interactions.slash_option(name="timespan", description="Whether to show the last 30 days or the complete graph if the full history is more than 30 days long", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value=""),interactions.SlashCommandChoice(name="All Time",value="_full")])
+@interactions.slash_command(name="history", description="View a recorded graph of your stat development. (Requires linked profile)")
+@interactions.slash_option(name="timespan", description="Whether to show the last 30 days or the complete graph if the full history is more than 30 days long", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value=""),interactions.SlashCommandChoice(name="All Time",value="full")])
 @interactions.slash_option(name="dataset", description="What dataset to use.", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Trophies",value="t"),interactions.SlashCommandChoice(name="TSR",value="r")])
-async def history(ctx: interactions.SlashContext, timespan: str, dataset: str):
+@interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
+async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, tagid: int = 1):
+    print("Catching request...")
+    await ctx.defer()
+    limiter = timespan != "full"
     if dataset == "r":
         await ctx.send("<:warning:1229332347086704661> This feature is under development.")
         return
     try:
-        print(os.getcwd())
-        file = interactions.File(f"graphs/{str(ctx.author.id)}{timespan}_{dataset}.png")
-        await ctx.send(f"Activate AutoSync via `/autosync` to get more data automatically.",file=file)
+        with open("bs_data.json") as f:
+            savedata = json.load(f)
+        with open("dc_id_rel.json") as f:
+            translatenames = json.load(f)
+        with open("bs_tags.json") as f:
+            x = json.load(f)
+            if str(ctx.author_id) not in x.keys():
+                await ctx.defer(ephemeral=True)
+                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!")
+                return
+            if tagid > len(x[str(ctx.author_id)]):
+                await ctx.defer(ephemeral=True)
+                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}")
+                return
+            i = x[str(ctx.author_id)][tagid-1]
+
+        def calculate_brightness(hex_color):
+            r = int(hex_color[1:3], 16)
+            g = int(hex_color[3:5], 16)
+            b = int(hex_color[5:7], 16)
+            return (r * 299 + g * 587 + b * 114) / 1000
+
+        z = 1
+        # <todo> Check if Tag has savedata
+        if len(savedata[i]["history"]) > 3:
+            print("Starting generation...")
+            colorcode = f"#{random.randint(0,999999):06}"
+            xlist = []
+            ylist = []
+            xOrigin = savedata[i]['history'][0]["time"]
+            for k in savedata[i]['history']:
+                xlist.append((k["time"] - xOrigin)/86400)
+                ylist.append(k["value"])
+            brightness = calculate_brightness(colorcode)
+            br_threshold = 128
+            if brightness < br_threshold:
+                plt.style.use('default')
+            else:
+                plt.style.use('dark_background')
+            plt.rcParams['axes.axisbelow'] = True
+            plt.rcParams["font.family"] = "Torus"
+            #plt.rcParams["font.weight"] = "bold"
+            plt.plot(xlist,ylist,color=colorcode,marker="x")
+            plt.xlabel(f"DAYS SINCE FIRST RECORDING\n({datetime.datetime.utcfromtimestamp(savedata[i]['history'][0]['time']).strftime('%d.%m.%Y')})")
+            plt.ylabel("TROPHIES")
+            try:
+                plt.title(f"Trophy-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
+            except:
+                plt.title(f"Trophy-Progression for 'UNKNOWN_TAG'/{i}")
+            if brightness > br_threshold:
+                plt.grid(which="major", color='gray')
+                plt.grid(which="minor", color='#222222', linestyle="dashed")
+            else:
+                plt.grid(which="major", color='gray')
+                plt.grid(which="minor", color='#DDDDDD', linestyle="dashed")
+            plt.minorticks_on()
+            print("Setting dimensions...")
+            plt.ylim(int(min(ylist)/500)*500,(int(max(ylist)/500)+2)*500)
+            if max(xlist) <= 15:
+                margin_negative = 0.9
+            else:
+                margin_negative = int(max(xlist)/15)
+            if not limiter:
+                plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+            else:
+                plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                if max(xlist) > 30:
+                    for k in reversed(xlist):
+                        if max(xlist) - 30 > k:
+                            breakstamp = k
+                            break
+                    adjusted_lim = ylist[xlist.index(breakstamp)]
+                    plt.ylim(int(adjusted_lim/500)*500,(int(max(ylist)/500)+2)*500)
+                    plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+            prev_y = 0
+            print("Annotating...")
+            for x,y in zip(xlist,ylist):
+                if abs(y - prev_y) > ((max(ylist) - min(ylist))/10 if not (limiter and max(xlist) > 30) else (max(ylist) - adjusted_lim)/10) or (xlist.index(x) == len(xlist)-1):
+                    if not((xlist.index(x) == len(xlist)-1)):
+                        plt.annotate(str(y), # annotation text
+                                    (x,y), # these are the coordinates to position the label
+                                    textcoords="offset points", # how to position the text
+                                    xytext=(0,10), # distance from text to points (x,y)
+                                    ha='center') # horizontal alignment can be left, right or center
+                        prev_y = y
+                    else:
+                        plt.annotate(str(y), # annotation text
+                                    (x,y), # these are the coordinates to position the label
+                                    textcoords="offset points", # how to position the text
+                                    xytext=(3,0), # distance from text to points (x,y)
+                                    ha='left', # horizontal alignment can be left, right or center
+                                    va='center',
+                                    color=colorcode,
+                                    bbox=dict(boxstyle="square,pad=0.3",fc="black" if brightness > br_threshold else "white", ec=colorcode, lw=1)) 
+            plt.savefig(f"graphs/{i}_{timespan}_{dataset}.png", bbox_inches="tight")
+        else:
+            await ctx.defer(ephemeral=True)
+            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!")
+            return
+        file = interactions.File(f"graphs/{i}_{timespan}_{dataset}.png")
+        await ctx.send(f"-# Activate AutoSync via `/autosync` to get more data automatically.",file=file)
     except Exception as e:
         await ctx.defer(ephemeral=True)
-        await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back in a few days.\n*Hint: Turn on AutoSync to get your stats automatically saved!*")
+        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```")
 
 @interactions.slash_command(name="status", description="Check if the bot (and it's services) are functional.")
 async def status(ctx: interactions.SlashContext):

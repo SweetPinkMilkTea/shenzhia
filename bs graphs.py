@@ -7,15 +7,13 @@ import json
 import datetime
 import os
 
-#os.chdir("C:/Users/s.ebensen/Desktop/shenzhitek")
-
 limiter = False
 
 fm = mpl.font_manager
 fm._get_fontconfig_fonts.cache_clear()
 
-font_dirs = ["C:/users/svene/appdata/local/microsoft/windows/fonts"]  # The path to the custom font file.
-font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
+font_dir = ["./font"]  # The path to the custom font file.
+font_files = font_manager.findSystemFonts(font_dir)
 
 for font_file in font_files:
     font_manager.fontManager.addfont(font_file)
@@ -70,7 +68,7 @@ for i in savedata.keys():
             else:
                 plt.style.use('dark_background')
             plt.rcParams['axes.axisbelow'] = True
-            plt.rcParams["font.family"] = "Bahnschrift"
+            plt.rcParams["font.family"] = "Torus"
             #plt.rcParams["font.weight"] = "bold"
             plt.plot(xlist,ylist,color=colorcode,marker="x")
             plt.xlabel(f"DAYS SINCE FIRST RECORDING\n({datetime.datetime.utcfromtimestamp(savedata[i]['history'][0]['time']).strftime('%d.%m.%Y')})")
