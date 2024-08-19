@@ -634,7 +634,7 @@ async def whois(ctx: interactions.SlashContext, id: str):
             except:
                 pass
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         await ctx.send(embed=embed)
         return
     
@@ -678,7 +678,7 @@ async def leaderboard(ctx: interactions.SlashContext):
             index += 1
         placement += 1
     embed.set_footer(text="Shenzhia",
-                icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
     return
 
@@ -749,7 +749,7 @@ async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = "")
                     except:
                         embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value="*No records*")
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         await ctx.send(embed=embed)
         return
     if tag == "":
@@ -785,6 +785,9 @@ async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = "")
         }
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
+                if response.status == 429:
+                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                    return
                 if response.status != 200:
                     await ctx.send(f"<:warning:1229332347086704661> '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
                     return
@@ -879,7 +882,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         embed.add_field(name="<:qito_trophy:1137140150065954816>",value=f"{totaltrophies:,} \u27A1 {totaltrophies-deduction:,} (-{deduction})",inline=False)
         embed.add_field(name="<:qito_bling:1137121684449677322>",value="+"+str(bling),inline=False)
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
@@ -1390,7 +1393,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         if str(ctx.author_id) not in tags:
             embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
@@ -1616,7 +1619,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         embed.add_field(name="Average TSR-Deviation",
                         value=f"{'+' if result > 0 else ''}{result:,}",
                         inline=True)
-        embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+        embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     else:
         if duel_mode:
             result = data["battle"]["result"].upper()
@@ -1735,7 +1738,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 embed.add_field(name="Average TSR-Deviation",
                                 value=f"{'+' if result > 0 else ''}{result:,}",
                                 inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         else:
             result = data["battle"]["result"].upper()
             battletype = data["battle"]["mode"].upper()
@@ -1904,7 +1907,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 embed.add_field(name="Average TSR-Deviation",
                                 value=f"{'+' if result > 0 else ''}{result:,}",
                                 inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
                 if isRankedDiv:
                     with open("bs_powerleague.json", "w") as f:
                         json.dump(pl_saves,f)
@@ -2076,7 +2079,7 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
 @interactions.slash_command(name="randomimg", description="Get a randomly chosen image from imgur.")
