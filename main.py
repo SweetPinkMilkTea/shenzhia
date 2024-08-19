@@ -1929,12 +1929,10 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
         with open("bs_tags.json") as f:
             x = json.load(f)
             if str(ctx.author_id) not in x.keys():
-                await ctx.defer(ephemeral=True)
-                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!")
+                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!",ephemeral=True)
                 return
             if tagid > len(x[str(ctx.author_id)]):
-                await ctx.defer(ephemeral=True)
-                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}")
+                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}",ephemeral=True)
                 return
             i = x[str(ctx.author_id)][tagid-1]
 
@@ -1972,7 +1970,7 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             try:
                 plt.title(f"Trophy-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
             except:
-                plt.title(f"Trophy-Progression for 'UNKNOWN_TAG'/{i}")
+                plt.title(f"Trophy-Progression for {i}")
             if brightness > br_threshold:
                 plt.grid(which="major", color='gray')
                 plt.grid(which="minor", color='#222222', linestyle="dashed")
@@ -1989,7 +1987,8 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                 plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
                 plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
             else:
-                plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                plt.xlim(left=max(xlist)-30 if max(xlist) > 30 else 0-margin_negative)
+                #plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
                 plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
                 if max(xlist) > 30:
                     for k in reversed(xlist):
@@ -2020,14 +2019,12 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                                     bbox=dict(boxstyle="square,pad=0.3",fc="black" if brightness > br_threshold else "white", ec=colorcode, lw=1)) 
             plt.savefig(f"graphs/{i}_{timespan}_{dataset}.png", bbox_inches="tight")
         else:
-            await ctx.defer(ephemeral=True)
-            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!")
+            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!",ephemeral=True)
             return
         file = interactions.File(f"graphs/{i}_{timespan}_{dataset}.png")
         await ctx.send(f"-# Activate AutoSync via `/autosync` to get more data automatically.",file=file)
     except Exception as e:
-        await ctx.defer(ephemeral=True)
-        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```")
+        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```",ephemeral=True)
 
 @interactions.slash_command(name="status", description="Check if the bot (and it's services) are functional.")
 async def status(ctx: interactions.SlashContext):
