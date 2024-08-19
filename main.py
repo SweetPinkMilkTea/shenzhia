@@ -35,7 +35,11 @@ for font_file in font_files:
     font_manager.fontManager.addfont(font_file)
 
 # First Setup
-req_files = ["fastlogin.json","loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+## Create directories
+if "graphs" not in os.listdir():
+    os.mkdir("graphs")
+## Create Files
+req_files = ["dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -45,7 +49,7 @@ if not all(x in os.listdir() for x in req_files):
                     json.dump({"name":""},f)
                 else:
                     json.dump({},f)
-    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again.")
+    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again to avoid overwriting tokens.")
     with open("dc_bot_tokens.json","w") as f:
         print("Discord Bottoken Setup\n---")
         a = ""

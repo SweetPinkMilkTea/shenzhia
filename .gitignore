@@ -1,5 +1,5 @@
 /archived code/
-/.venv
+.venv/
 graphs/*
 !graphs/
 *.json
