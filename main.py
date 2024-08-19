@@ -7,6 +7,7 @@ class ManualRaisedException(Exception):
 class APIConnectionException(Exception):
     pass
 
+import re
 import sys
 import interactions
 from interactions.ext.paginators import Paginator
@@ -1908,9 +1909,9 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
 @interactions.slash_command(name="history", description="View a recorded graph of your stat development. (Requires linked profile)")
 @interactions.slash_option(name="timespan", description="Whether to show the last 30 days or the complete graph if the full history is more than 30 days long", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value=""),interactions.SlashCommandChoice(name="All Time",value="full")])
 @interactions.slash_option(name="dataset", description="What dataset to use.", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Trophies",value="t"),interactions.SlashCommandChoice(name="TSR",value="r")])
+@interactions.slash_option(name="graphcolor", description="Set the color of the graph. Use Hex-codes for this (#xxxxxx).", required=False, opt_type=interactions.OptionType.STRING, min_length=7, max_length=7)
 @interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
-async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, tagid: int = 1):
-    print("Catching request...")
+async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, graphcolor: str = "", tagid: int = 1):
     await ctx.defer()
     limiter = timespan != "full"
     if dataset == "r":
@@ -1942,8 +1943,10 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
         z = 1
         # <todo> Check if Tag has savedata
         if len(savedata[i]["history"]) > 3:
-            print("Starting generation...")
-            colorcode = f"#{random.randint(0,999999):06}"
+            if graphcolor == "" or (not bool(re.match(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$', graphcolor))):
+                colorcode = f"#{random.randint(0,999999):06}"
+            else:
+                colorcode = graphcolor.upper().strip()
             xlist = []
             ylist = []
             xOrigin = savedata[i]['history'][0]["time"]
@@ -1973,7 +1976,6 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
                 plt.grid(which="major", color='gray')
                 plt.grid(which="minor", color='#DDDDDD', linestyle="dashed")
             plt.minorticks_on()
-            print("Setting dimensions...")
             plt.ylim(int(min(ylist)/500)*500,(int(max(ylist)/500)+2)*500)
             if max(xlist) <= 15:
                 margin_negative = 0.9
@@ -1994,7 +1996,6 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
                     plt.ylim(int(adjusted_lim/500)*500,(int(max(ylist)/500)+2)*500)
                     plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
             prev_y = 0
-            print("Annotating...")
             for x,y in zip(xlist,ylist):
                 if abs(y - prev_y) > ((max(ylist) - min(ylist))/10 if not (limiter and max(xlist) > 30) else (max(ylist) - adjusted_lim)/10) or (xlist.index(x) == len(xlist)-1):
                     if not((xlist.index(x) == len(xlist)-1)):
