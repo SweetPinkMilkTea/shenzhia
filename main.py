@@ -1983,13 +1983,18 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                 margin_negative = 0.9
             else:
                 margin_negative = int(max(xlist)/15)
+            stepunit = 500
+            markers = int(max(ylist)/stepunit)+2 - int(min(ylist)/stepunit)
+            while markers > 15:
+                stepunit *= 2
+                markers = int(max(ylist)/stepunit)+2 - int(min(ylist)/stepunit)
             if not limiter:
                 plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
-                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
             else:
                 plt.xlim(left=max(xlist)-30 if max(xlist) > 30 else 0-margin_negative)
                 #plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
-                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
                 if max(xlist) > 30:
                     for k in reversed(xlist):
                         if max(xlist) - 30 > k:
@@ -1997,14 +2002,20 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                             break
                     adjusted_lim = ylist[xlist.index(breakstamp)]
                     plt.ylim(int(adjusted_lim/500)*500,(int(max(ylist)/500)+2)*500)
-                    plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                    stepunit = 500
+                    markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
+                    while markers > 15:
+                        stepunit *= 2
+                        markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
+                    plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
             prev_y = 0
             for x,y in zip(xlist,ylist):
-                if abs(y - prev_y) > ((max(ylist) - min(ylist))/10 if not (limiter and max(xlist) > 30) else (max(ylist) - adjusted_lim)/10) or (xlist.index(x) == len(xlist)-1):
+                if abs(y - prev_y) > (max(ylist) - min(ylist))/10 or xlist.index(x) == len(xlist)-1:
                     if not((xlist.index(x) == len(xlist)-1)):
                         plt.annotate(str(y), # annotation text
                                     (x,y), # these are the coordinates to position the label
                                     textcoords="offset points", # how to position the text
+                                    color=colorcode,
                                     xytext=(0,10), # distance from text to points (x,y)
                                     ha='center') # horizontal alignment can be left, right or center
                         prev_y = y
