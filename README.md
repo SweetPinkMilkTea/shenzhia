@@ -52,7 +52,7 @@ Shenzhia needs additional resources outside of python related to you. These cons
 ## First Run
 
 > [!IMPORTANT]
-> Add your bot to a server and get it's and a subsequents channel ID before starting `main.py`.
+> Add your bot to a server and get it's and one of it's channels ID before starting `main.py`.
 >
 > This server will be an "Admin-Server" with additional privileged commands. Make sure only trusted users are inside this server.
 
@@ -82,7 +82,7 @@ This command can only be used, if a user:
 - has linked at least one profile
 - has successfully executed a `/performance` command while their tag was linked
 
-> [TIP]
+> [!TIP]
 > Behaviour of Autosync itself can be found/adjusted under the `autosync()` coroutine.
 
 ### `/bling`
@@ -92,7 +92,7 @@ Get information on how much bling you will get next trophy reset. Also displays 
 Shows all Shenzhia-Artwork that has been done by artists.
 
 ### `/history`
-> [NOTE]
+> [!NOTE]
 > This command is incomplete but functional. It will be expanded upon in the future.
 
 Displays your Trophy/TSR-Progression in a graph.
@@ -101,14 +101,14 @@ You can choose if the graph shows the last 30 days or all available data with th
 All generated graphs are saved in `./graphs` until they are overwritten. Graphs are saved per user and display mode.
 
 ### `/hyperchargecount`
-> [NOTE]
+> [!NOTE]
 > - This command is sadly necessary, as the Brawl Stars API does not transmit any data containing Hypercharges.
 > - This command can only be executed by uses who have linked at least one profile.
 
 Set how many Hypercharges you currently have. Either set explicitly or add onto an existing record.
 
 ### `/leaderboard`
-> [NOTE]
+> [!NOTE]
 > This command is incomplete but functional. It will be expanded upon in the future.
 
 Shows the 9 best users of Shenzhia by their highest achieved TSR.
@@ -116,31 +116,31 @@ Shows the 9 best users of Shenzhia by their highest achieved TSR.
 Updates to the leaderboard occur when the `bs_player_leaderboard()` coroutine runs (every 3 hours).
 
 ### `/listing`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/matchanalysis`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/performance`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/poll`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/profilelink`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/progression`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/randomimg`
-> [NOTE]
+> [!NOTE]
 > Description to be added...
 
 ### `/roll`
@@ -153,7 +153,7 @@ Randomly chooses between different options in a passed list.
 
 Seperate arguments with `,`.
 
-> [INFO]
+> [!INFO]
 > Avoid using leading or trailing commas, as well as commas inside arguments to prevent unexpected results.
 
 ### `/status`
@@ -165,7 +165,7 @@ If any issues
 Returns all Brawl Stars Profiles that are linked to the specified Discord User-ID.
 
 ## "Admin-Server"-specific Commands
-> [NOTE]
+> [!NOTE]
 > Any commands not explained here are only for testing purposes and do not have any utility.
 
 ### `/close`
@@ -210,5 +210,5 @@ The amount given in `duration` is equal to the amount of minutes logging will be
 ### `/tokenswitch`
 Replace the Brawl Stars API token with another one.
 
-> [INFO]
+> [!INFO]
 > Your input is not checked, be sure you copied the the token correctly.
