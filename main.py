@@ -232,12 +232,12 @@ async def on_startup():
     await bot.change_presence(status=interactions.Status.ONLINE)
     print(f'\nStarted Session as [{bot.user}] on code [{exitcode}]')
     try:
-        check_trophies.start()
+        autosync.start()
         bs_player_leaderboard.start()
         ar_refresh.start()
         await bs_player_leaderboard()
         if exitcode == 0:
-            await check_trophies()
+            await autosync()
             await ar_refresh()
     except:
         print("Task error!")
@@ -252,7 +252,7 @@ async def on_startup():
     return
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=12))
-async def check_trophies():
+async def autosync():
     global bsdict
     with open("bs_data.json") as f:
         bsdict = json.load(f)
@@ -574,7 +574,7 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     await ctx.defer()
     await ctx.send(f"<{subject}> initiated.")
     if subject == "AS":
-        await check_trophies()
+        await autosync()
     elif subject == "LBp":
         await bs_player_leaderboard()
     elif subject == "AR":
@@ -700,7 +700,7 @@ async def shuffle(ctx: interactions.SlashContext, id: str = ""):
     await ctx.send_modal(modal=list_modal)
 
 @interactions.slash_command(name="autosync", description="Enable automatic trophy saving for your primary linked tag. (Requires linked profile)")
-async def autosync(ctx: interactions.SlashContext):
+async def enable_autosync(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
