@@ -179,7 +179,7 @@ Seperate arguments with `,`.
 ### `/status`
 Tests the connection to the Brawl Stars API (and by extension if the bot is alive).
 
-If any issues 
+Displays errors when they occur.
 
 ### `/whois`
 Returns all Brawl Stars Profiles that are linked to the specified Discord User-ID.
@@ -187,6 +187,9 @@ Returns all Brawl Stars Profiles that are linked to the specified Discord User-I
 ## "Admin-Server"-specific Commands
 > [!NOTE]
 > Any commands not explained here are only for testing purposes and do not have any utility.
+
+> [!CAUTION]
+> Most of the commands in this section have a major (indirect) impact on the operation of the bot. Take precautions to not let malicious actors access these commands!
 
 ### `/close`
 Ends the program. Useful if you don't have access to the host at the time.
@@ -202,7 +205,7 @@ Setting `listdir` to `True` will instead list everything inside the directory sp
 Rerun a task ahead of scedule. This doesn't affect the regular excutions of the task.
 
 ### `/ip`
-Show the IPv4 Address currently in use by the host running the bot.
+Show the IPv4 Address currently in use by the host device running the bot.
 
 ### `/linknames`
 Fetch the Discord-Usernames of every user that has linked at least one profile. Names are linked to User-IDs.
@@ -210,12 +213,15 @@ Fetch the Discord-Usernames of every user that has linked at least one profile. 
 If a username cannot be fetched (e.g. the user is not sharing a server with the bot anymore), the ID is used as the name instead.
 
 ### `/reloadjson`
-Overwrite the variables manually that are set at the beginning of the program.
+Rewrites the constants that are set at the beginning of the program.
+
+> [!TIP]
+> If any additional constants are added, adding the load process within the coroutine is a good idea.
 
 ### `/reset_ranked_elo`
 Sets the `current` key for everyone's saved ranked data to 0 (Effectively showing "Unranked").
 
-This action is irreversible, unless a backup was made.
+This action is irreversible unless a backup was made.
 
 ### `/say`
 Let the bot say anything wherever you want.
@@ -230,8 +236,8 @@ The amount given in `duration` is equal to the amount of minutes logging will be
 ### `/tokenswitch`
 Replace the Brawl Stars API token with another one.
 
-> [!INFO]
-> Your input is not checked, be sure you copied the the token correctly.
+> [!NOTE]
+> Your input will not be checked for validity, be sure you copied the the token correctly.
 
 # Additional Information
 The following sections are not necessary for operation on the bot, but can give very helpful insight.
@@ -242,7 +248,7 @@ The Brawl Stars API gives out a good amount of data, but sadly, has not been upd
 
 The following list describes the data you can expect to get from it (and expected data unfortunately missing).
 
-> [!INFO]
+> [!NOTE]
 > Time of writing: 20th Aug 2024
 
 | *Data* | *Availablity* |
@@ -277,5 +283,5 @@ The following list describes the data you can expect to get from it (and expecte
 
 ## Glossary
 
-> [!INFO]
+> [!NOTE]
 > This section is not written yet...
