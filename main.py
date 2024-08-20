@@ -526,7 +526,7 @@ async def reset_ranked_elo(ctx: interactions.SlashContext):
     ctx.send("Completed.")
 
 @interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[scope])
-@interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=False, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="listdir", description="Instead of sending a resource, list items in subdirectory", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def export(ctx: interactions.SlashContext, listdir: bool = False, query: str = ""):
     if listdir:
