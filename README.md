@@ -116,8 +116,17 @@ Shows the 9 best users of Shenzhia by their highest achieved TSR.
 Updates to the leaderboard occur when the `bs_player_leaderboard()` coroutine runs (every 3 hours).
 
 ### `/listing`
-> [!NOTE]
-> Description to be added...
+Use this command to add/remove yourself to/from a server wide list.
+
+This list can be used for many reasons - like giveaways, participation checks or anything else.
+
+As a list admin, additional configurations can be made:
+- `clear` - Completely wipe the list clean.
+- `lock` - No further changes can be made to the list.
+- `restrict` - Only users with at least 1 profile link can join the list.
+
+> [!TIP]
+> To access the admin commands, enter your Discord username in the `listadmins` symbol. This will likely however be moved to an external file.
 
 ### `/matchanalysis`
 > [!NOTE]
@@ -128,20 +137,31 @@ Updates to the leaderboard occur when the `bs_player_leaderboard()` coroutine ru
 > Description to be added...
 
 ### `/poll`
-> [!NOTE]
-> Description to be added...
+> [!IMPORTANT]
+> This command is broken. It will get fixed in the future.
 
 ### `/profilelink`
 > [!NOTE]
 > Description to be added...
 
 ### `/progression`
-> [!NOTE]
-> Description to be added...
+Shows how much resources you have to collect to be able to max out.
+Additionally, a percentage value is given out as well, telling you how far along the way you already are. The status of your brawler power, as well as your battle items is displayed too.
+
+With the `advanced` argument, more stricter requirements for brawlers to be considered "maxed" can be enabled.
+
+> [!TIP]
+>
+> The requirements for "maxing out" per brawler are as follows: 
+> | Standard | Advanced |
+> | --- | --- |
+> | Power 11 | Power 11 |
+> | 1 Gadget | 2 Gadgets |
+> | 1 Star Power | 2 Star Powers |
+> | 2 Gears | 5 Gears |
 
 ### `/randomimg`
-> [!NOTE]
-> Description to be added...
+Sends a random image from imgur. Enabling `hidden` makes you able to spam this without regrets (probably)
 
 ### `/roll`
 Roll virtual dice. The number of sides and amount of dice can be set within limits.
@@ -212,3 +232,50 @@ Replace the Brawl Stars API token with another one.
 
 > [!INFO]
 > Your input is not checked, be sure you copied the the token correctly.
+
+# Additional Information
+The following sections are not necessary for operation on the bot, but can give very helpful insight.
+
+## About the Brawl Stars API
+
+The Brawl Stars API gives out a good amount of data, but sadly, has not been updated to keep up with the updates the actual game has gotten.
+
+The following list describes the data you can expect to get from it (and expected data unfortunately missing).
+
+> [!INFO]
+> Time of writing: 20th Aug 2024
+
+| *Data* | *Availablity* |
+| ---- | ----------- |
+| **Main Profile**  |  |
+| Current total Trophies    | ✅ |
+| Highest total Trophies    | ✅ |
+| Win counts for 3v3 and SD | ✅ |
+| Fame | ❌ |
+| Win Streaks | ❌ |
+| Ranked | see later |
+| **Brawlers**  |  |
+| Current Trophies      | ✅ |
+| Highest Trophies      | ✅ |
+| Highest achieved Tier | ✅ |
+| Power Level | ✅ |
+| Gadgets, Star Powers and Gears | ✅ |
+| Hypercharges | ❌ |
+| Equipped skin | ❌ |
+| Mastery | ❌ |
+| **Ranked**  |  |
+| Current Ranked Rank                | ⚠️ |
+| Highest Ranked Rank                | ❌ |
+| Current Ranked Elo                 | ❌ |
+| Highest Ranked Elo                 | ❌ |
+| **Battle Log**  |  |
+| Played Brawlers                    | ✅ |
+| Total Trophies of Players          | ✅ |
+| Brawler Trophies of Players        | ✅ |
+| K/D                                | ❌ |
+| Damage dealt / Healing done        | ❌ |
+
+## Glossary
+
+> [!INFO]
+> This section is not written yet...
