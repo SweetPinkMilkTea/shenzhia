@@ -2304,6 +2304,14 @@ async def gallery(ctx: interactions.SlashContext):
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
     
+@interactions.slash_command(name="help", description="View the documentation.")
+async def help(ctx: interactions.SlashContext):
+    embed = interactions.Embed(title="Get started (BETA)",
+                      color=0x6f07b4,
+                      timestamp=datetime.datetime.now())
+    embed.add_field(name="View the Shenzhia GitHub page",value="*It contains all the code and useful documentation*\n[Visit the Repository here](<https://github.com/SweetPinkMilkTea/shenzhia>)")
+    ctx.send(embed=embed)
+
 # -------------------
 # CALLBACKS
 # -------------------
