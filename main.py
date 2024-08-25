@@ -7,6 +7,7 @@ class ManualRaisedException(Exception):
 class APIConnectionException(Exception):
     pass
 
+import re
 import sys
 import interactions
 from interactions.ext.paginators import Paginator
@@ -34,7 +35,11 @@ for font_file in font_files:
     font_manager.fontManager.addfont(font_file)
 
 # First Setup
-req_files = ["fastlogin.json","loggingchannel.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+## Create directories
+if "graphs" not in os.listdir():
+    os.mkdir("graphs")
+## Create Files
+req_files = ["dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -44,7 +49,7 @@ if not all(x in os.listdir() for x in req_files):
                     json.dump({"name":""},f)
                 else:
                     json.dump({},f)
-    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again.")
+    input("Welcome to the first-run setup. Press Enter to continue.\n\nIf you see this message more than once already, stop the script and run again to avoid overwriting tokens.")
     with open("dc_bot_tokens.json","w") as f:
         print("Discord Bottoken Setup\n---")
         a = ""
@@ -167,10 +172,12 @@ while True:
         with open("bs_api_token.json", "w") as f:
             json.dump(bs_api_dict,f)
     except:
+        brawlerIDs = {}
         maxGadgets = maxStarpower = maxGear = maxCurrency = maxCurrencyAdv = 0
         if not backup:
             maxBrawlers = len(data["items"])
             for i in data["items"]:
+                brawlerIDs[i["id"]] = i['name']
                 maxGadgets += len(i["gadgets"])
                 maxStarpower += len(i["starPowers"])
                 maxCurrency += 20245
@@ -227,12 +234,12 @@ async def on_startup():
     await bot.change_presence(status=interactions.Status.ONLINE)
     print(f'\nStarted Session as [{bot.user}] on code [{exitcode}]')
     try:
-        check_trophies.start()
+        autosync.start()
         bs_player_leaderboard.start()
         ar_refresh.start()
         await bs_player_leaderboard()
         if exitcode == 0:
-            await check_trophies()
+            await autosync()
             await ar_refresh()
     except:
         print("Task error!")
@@ -247,7 +254,7 @@ async def on_startup():
     return
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=12))
-async def check_trophies():
+async def autosync():
     global bsdict
     with open("bs_data.json") as f:
         bsdict = json.load(f)
@@ -521,7 +528,7 @@ async def reset_ranked_elo(ctx: interactions.SlashContext):
     ctx.send("Completed.")
 
 @interactions.slash_command(name="export", description="Search for a resource in the bot directory and send it", scopes=[scope])
-@interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=False, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="query", description="(!listdir) : Query of file | (listdir) : subdirectory", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="listdir", description="Instead of sending a resource, list items in subdirectory", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def export(ctx: interactions.SlashContext, listdir: bool = False, query: str = ""):
     if listdir:
@@ -569,7 +576,7 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     await ctx.defer()
     await ctx.send(f"<{subject}> initiated.")
     if subject == "AS":
-        await check_trophies()
+        await autosync()
     elif subject == "LBp":
         await bs_player_leaderboard()
     elif subject == "AR":
@@ -629,7 +636,7 @@ async def whois(ctx: interactions.SlashContext, id: str):
             except:
                 pass
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         await ctx.send(embed=embed)
         return
     
@@ -673,7 +680,7 @@ async def leaderboard(ctx: interactions.SlashContext):
             index += 1
         placement += 1
     embed.set_footer(text="Shenzhia",
-                icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
     return
 
@@ -695,7 +702,7 @@ async def shuffle(ctx: interactions.SlashContext, id: str = ""):
     await ctx.send_modal(modal=list_modal)
 
 @interactions.slash_command(name="autosync", description="Enable automatic trophy saving for your primary linked tag. (Requires linked profile)")
-async def autosync(ctx: interactions.SlashContext):
+async def enable_autosync(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
@@ -744,7 +751,7 @@ async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = "")
                     except:
                         embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value="*No records*")
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         await ctx.send(embed=embed)
         return
     if tag == "":
@@ -780,6 +787,9 @@ async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = "")
         }
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
+                if response.status == 429:
+                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                    return
                 if response.status != 200:
                     await ctx.send(f"<:warning:1229332347086704661> '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
                     return
@@ -816,7 +826,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set one.")
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set one.")
         return
     for i in tag:
         try:
@@ -874,7 +884,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         embed.add_field(name="<:qito_trophy:1137140150065954816>",value=f"{totaltrophies:,} \u27A1 {totaltrophies-deduction:,} (-{deduction})",inline=False)
         embed.add_field(name="<:qito_bling:1137121684449677322>",value="+"+str(bling),inline=False)
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
@@ -905,7 +915,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set it.",ephemeral=True)
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     embeds = []
     for tag_element in tag:
@@ -914,6 +924,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             bsdict[tag_element] = {"history":[],"updates":False}
         url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag_element)}/"
+        url2 = f"https://api.hpdevfox.ru/profile/{tag_element.replace('#','')}"
         headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {bs_api_token}"
@@ -921,6 +932,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 data = await response.json()
+            async with session.get(url2, headers=headers) as response:
+                su_data = await response.json()
         try:
             print(data["reason"])
             await ctx.send(send_api_error(data["reason"]),ephemeral=True)
@@ -936,6 +949,18 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 return
             except:
                 pass
+        # Mastery
+        mastery_dict = {}
+        for i in su_data["response"]["Heroes"]:
+            mastery_dict[brawlerIDs[i["Character"]]] = i["Mastery"]
+        # Ranked
+        load_from_archive = False
+        try:
+            i = su_data["response"]["Stats"]
+            ranked_dict = {"rank_current":i["23"],"rank_best":i["22"],"score_current":i["24"],"score_best":i["25"]}
+        except:
+            raise Exception()
+            load_from_archive = True
         brawlerlist = data["brawlers"]
         def brawlersort(a):
             return a["trophies"]
@@ -1204,7 +1229,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 tsr_display = ""
                 tsr_val = -1
             nl = "\n"
-            debug_ext = ""
             lock_brawler_overview = False
             try:
                 bname = brawlerlist[i]['name'].upper()
@@ -1213,11 +1237,25 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 lock_brawler_overview = True
             if not lock_brawler_overview:
                 try:
+                    masterypoints = mastery_dict[bname]
+                    m_index = 0
+                    for j in [300,800,1500,2600,4000,5800,10300,16800,24800]:
+                        if masterypoints >= j:
+                            m_index += 1
+                        else:
+                            break
+                    if m_index not in [0,9]:
+                        multiplier = m_index%3 if m_index%3 != 0 else 3
+                        mastery_display = f"{['<:bronzestar:1153418350970536007>','<:silverstar:1153418444486758513>','<:goldstar:1153418516205162577>'][(m_index-1)//3]}" * multiplier
+                    elif m_index == 9:
+                        mastery_display = f"{'<:goldstar:1153418516205162577>'*3} + {masterypoints - 24800}"
+                    else:
+                        mastery_display = f""
                     gadgetindicator = "<:gadget:1228965764631892069>" if len(brawlerlist[i]["gadgets"]) > 0 else "<:no_util:1228965782390702201>"
                     spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{debug_ext}",inline=True)
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl}{mastery_display}",inline=True)
                 except Exception as e:
                     embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
                     print(f"{e} : {str(e)}")
@@ -1245,15 +1283,18 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     tsrstr = "+" + tsrstr
             embed.add_field(name=f"FLUCTUATION",value=f"<t:{fluc_list[-2]['time']}:R>\n{sessionstr} / {tsrstr}",inline=True)
         #Power League
-        with open("bs_powerleague.json","r") as f:
-            pl_saves = json.load(f)
-        if tag_element in pl_saves.keys():
-            pl_index_best = pl_saves[tag_element]["best"]
-            pl_index_current = pl_saves[tag_element]["current"]
-            rlist = ["<:tranknone:1134890614635372675>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_d:1262542011576356915>","<:rank_d_plus:1262542055326879858>","<:rank_c_minus:1262542122469294121>","<:rank_c:1262542167440756847>","<:rank_c_plus:1262542219714494484>","<:rank_b_minus:1262542285644501095>","<:rank_b:1262543019417014333>","<:rank_b_plus:1262543136291426394>","<:rank_a_minus:1262543188908839022>","<:rank_a:1262543236518383616>","<:rank_a_plus:1262543274506457089>","<:rank_s_minus:1263948719577894922> ","<:rank_s:1263948731167015013>","<:rank_s_plus:1263948744286802021>","<:rank_ss:1263953646245384274>","<:trankx:1133686283093426256>"]
-            embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}\nBest: {rlist[pl_index_best]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_best]}",inline=True)
+        rlist = ["<:tranknone:1134890614635372675>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_d:1262542011576356915>","<:rank_d_plus:1262542055326879858>","<:rank_c_minus:1262542122469294121>","<:rank_c:1262542167440756847>","<:rank_c_plus:1262542219714494484>","<:rank_b_minus:1262542285644501095>","<:rank_b:1262543019417014333>","<:rank_b_plus:1262543136291426394>","<:rank_a_minus:1262543188908839022>","<:rank_a:1262543236518383616>","<:rank_a_plus:1262543274506457089>","<:rank_s_minus:1263948719577894922> ","<:rank_s:1263948731167015013>","<:rank_s_plus:1263948744286802021>","<:rank_ss:1263953646245384274>","<:trankx:1133686283093426256>"]
+        if load_from_archive:
+            with open("bs_powerleague.json","r") as f:
+                pl_saves = json.load(f)
+            if tag_element in pl_saves.keys():
+                pl_index_best = pl_saves[tag_element]["best"]
+                pl_index_current = pl_saves[tag_element]["current"]
+                embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}\nBest: {rlist[pl_index_best]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_best]}",inline=True)
+            else:
+                embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
         else:
-            embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
+            embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[ranked_dict['rank_current']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_current']]} ({ranked_dict['score_current']})\nBest: {rlist[ranked_dict['rank_best']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_best']]} ({ranked_dict['score_best']})",inline=True)
         #Win Rate
         if nolog:
             embed.add_field(name=f"RECENT WIN-RATE",value=f"<:warning:1229332347086704661> Unavailable...",inline=True)
@@ -1385,7 +1426,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         if str(ctx.author_id) not in tags:
             embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
@@ -1401,7 +1442,7 @@ async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: in
     with open("bs_hc_info.json","r") as f:
         hcinfo = json.load(f)
     if str(ctx.author.id) not in tags.keys():
-        await ctx.send(f"<:warning:1229332347086704661> Link your BS-Account with '/bslink' first.",ephemeral=True)
+        await ctx.send(f"<:warning:1229332347086704661> Link your BS-Account with '/profilelink' first.",ephemeral=True)
         return
     if tagid > len(tags[str(ctx.author.id)]):
         await ctx.send(f"<:warning:1229332347086704661> Provided Tag-ID is out of range.",ephemeral=True)
@@ -1439,7 +1480,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
     if str(ctx.author.id) not in tags:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set it.",ephemeral=True)
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     tag = tag.upper()
     if tag == "":
@@ -1611,7 +1652,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         embed.add_field(name="Average TSR-Deviation",
                         value=f"{'+' if result > 0 else ''}{result:,}",
                         inline=True)
-        embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+        embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     else:
         if duel_mode:
             result = data["battle"]["result"].upper()
@@ -1730,7 +1771,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 embed.add_field(name="Average TSR-Deviation",
                                 value=f"{'+' if result > 0 else ''}{result:,}",
                                 inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         else:
             result = data["battle"]["result"].upper()
             battletype = data["battle"]["mode"].upper()
@@ -1899,7 +1940,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 embed.add_field(name="Average TSR-Deviation",
                                 value=f"{'+' if result > 0 else ''}{result:,}",
                                 inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
                 if isRankedDiv:
                     with open("bs_powerleague.json", "w") as f:
                         json.dump(pl_saves,f)
@@ -1908,9 +1949,9 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
 @interactions.slash_command(name="history", description="View a recorded graph of your stat development. (Requires linked profile)")
 @interactions.slash_option(name="timespan", description="Whether to show the last 30 days or the complete graph if the full history is more than 30 days long", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value=""),interactions.SlashCommandChoice(name="All Time",value="full")])
 @interactions.slash_option(name="dataset", description="What dataset to use.", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Trophies",value="t"),interactions.SlashCommandChoice(name="TSR",value="r")])
+@interactions.slash_option(name="graphcolor", description="Set the color of the graph. Use Hex-codes for this (#xxxxxx).", required=False, opt_type=interactions.OptionType.STRING, min_length=7, max_length=7)
 @interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
-async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, tagid: int = 1):
-    print("Catching request...")
+async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, graphcolor: str = "", tagid: int = 1):
     await ctx.defer()
     limiter = timespan != "full"
     if dataset == "r":
@@ -1924,12 +1965,10 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
         with open("bs_tags.json") as f:
             x = json.load(f)
             if str(ctx.author_id) not in x.keys():
-                await ctx.defer(ephemeral=True)
-                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!")
+                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!",ephemeral=True)
                 return
             if tagid > len(x[str(ctx.author_id)]):
-                await ctx.defer(ephemeral=True)
-                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}")
+                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}",ephemeral=True)
                 return
             i = x[str(ctx.author_id)][tagid-1]
 
@@ -1942,8 +1981,10 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
         z = 1
         # <todo> Check if Tag has savedata
         if len(savedata[i]["history"]) > 3:
-            print("Starting generation...")
-            colorcode = f"#{random.randint(0,999999):06}"
+            if graphcolor == "" or (not bool(re.match(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$', graphcolor))):
+                colorcode = f"#{random.randint(0,999999):06}"
+            else:
+                colorcode = graphcolor.upper().strip()
             xlist = []
             ylist = []
             xOrigin = savedata[i]['history'][0]["time"]
@@ -1965,7 +2006,7 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
             try:
                 plt.title(f"Trophy-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
             except:
-                plt.title(f"Trophy-Progression for 'UNKNOWN_TAG'/{i}")
+                plt.title(f"Trophy-Progression for {i}")
             if brightness > br_threshold:
                 plt.grid(which="major", color='gray')
                 plt.grid(which="minor", color='#222222', linestyle="dashed")
@@ -1973,18 +2014,23 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
                 plt.grid(which="major", color='gray')
                 plt.grid(which="minor", color='#DDDDDD', linestyle="dashed")
             plt.minorticks_on()
-            print("Setting dimensions...")
             plt.ylim(int(min(ylist)/500)*500,(int(max(ylist)/500)+2)*500)
             if max(xlist) <= 15:
                 margin_negative = 0.9
             else:
                 margin_negative = int(max(xlist)/15)
+            stepunit = 500
+            markers = int(max(ylist)/stepunit)+2 - int(min(ylist)/stepunit)
+            while markers > 15:
+                stepunit *= 2
+                markers = int(max(ylist)/stepunit)+2 - int(min(ylist)/stepunit)
             if not limiter:
                 plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
-                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
             else:
-                plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
-                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                plt.xlim(left=max(xlist)-30 if max(xlist) > 30 else 0-margin_negative)
+                #plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
                 if max(xlist) > 30:
                     for k in reversed(xlist):
                         if max(xlist) - 30 > k:
@@ -1992,15 +2038,20 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
                             break
                     adjusted_lim = ylist[xlist.index(breakstamp)]
                     plt.ylim(int(adjusted_lim/500)*500,(int(max(ylist)/500)+2)*500)
-                    plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, 500))
+                    stepunit = 500
+                    markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
+                    while markers > 15:
+                        stepunit *= 2
+                        markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
+                    plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
             prev_y = 0
-            print("Annotating...")
             for x,y in zip(xlist,ylist):
-                if abs(y - prev_y) > ((max(ylist) - min(ylist))/10 if not (limiter and max(xlist) > 30) else (max(ylist) - adjusted_lim)/10) or (xlist.index(x) == len(xlist)-1):
+                if abs(y - prev_y) > (max(ylist) - min(ylist))/10 or xlist.index(x) == len(xlist)-1:
                     if not((xlist.index(x) == len(xlist)-1)):
                         plt.annotate(str(y), # annotation text
                                     (x,y), # these are the coordinates to position the label
                                     textcoords="offset points", # how to position the text
+                                    color=colorcode,
                                     xytext=(0,10), # distance from text to points (x,y)
                                     ha='center') # horizontal alignment can be left, right or center
                         prev_y = y
@@ -2015,14 +2066,12 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, t
                                     bbox=dict(boxstyle="square,pad=0.3",fc="black" if brightness > br_threshold else "white", ec=colorcode, lw=1)) 
             plt.savefig(f"graphs/{i}_{timespan}_{dataset}.png", bbox_inches="tight")
         else:
-            await ctx.defer(ephemeral=True)
-            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!")
+            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!",ephemeral=True)
             return
         file = interactions.File(f"graphs/{i}_{timespan}_{dataset}.png")
         await ctx.send(f"-# Activate AutoSync via `/autosync` to get more data automatically.",file=file)
     except Exception as e:
-        await ctx.defer(ephemeral=True)
-        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```")
+        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```",ephemeral=True)
 
 @interactions.slash_command(name="status", description="Check if the bot (and it's services) are functional.")
 async def status(ctx: interactions.SlashContext):
@@ -2063,7 +2112,7 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/74d23eaed7713a6d474dfbbf225bd40c?size=256")
+                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
 @interactions.slash_command(name="randomimg", description="Get a randomly chosen image from imgur.")
@@ -2255,6 +2304,14 @@ async def gallery(ctx: interactions.SlashContext):
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
     
+@interactions.slash_command(name="help", description="View the documentation.")
+async def help(ctx: interactions.SlashContext):
+    embed = interactions.Embed(title="Get started (BETA)",
+                      color=0x6f07b4,
+                      timestamp=datetime.datetime.now())
+    embed.add_field(name="View the Shenzhia GitHub page",value="*It contains all the code and useful documentation*\n[Visit the Repository here](<https://github.com/SweetPinkMilkTea/shenzhia>)")
+    ctx.send(embed=embed)
+
 # -------------------
 # CALLBACKS
 # -------------------
