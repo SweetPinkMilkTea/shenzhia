@@ -300,8 +300,6 @@ The following list describes the data you can expect to get from it (and expecte
 > ✅: Available
 > ⚠️: Supplemented by 3rd party API
 > ❌: Unavialable
->
-> For now, entries marked with ⚠️ are not accessible yet.
 
 | *Data* | *Availablity* |
 | ---- | ----------- |
