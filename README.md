@@ -129,20 +129,60 @@ As a list admin, additional configurations can be made:
 > To access the admin commands, enter your Discord username in the `listadmins` symbol. This will likely however be moved to an external file.
 
 ### `/matchanalysis`
+> [!TIP]
+> Terms specific to Shenzhia are used here. Use the [Glossary](#glossary) to search them up.
+
+Gets a match from your (or the specified profiles) battle log and analyses all of its participants like in `/performance`.
+
+The following is displayed when running the command:
+- Every participating players:
+  - Picked brawler and their trophies, power, gadget/star power/gear status
+  - Current total trophies
+  - Current TSR and associated rank
+- Differences in your and the opposing teams:
+  - Average brawler trophy count
+  - Average total trophy count
+  - Average TSR
+
 > [!NOTE]
-> Description to be added...
+> Evaluation is only available for 3v3 or Solo Showdown matches with all player slots filled. 
 
 ### `/performance`
+> [!TIP]
+> Terms specific to Shenzhia are used here. Use the [Glossary](#glossary) to search them up.
+
+Evaluates your profile on the basis of your Trophies and Ranked data ([within limits](##About-the-Brawl-Stars-API)).
+
+The following is displayed when running the command:
+- Profiles current and highest Trophies
+- Profiles current and highest recorded TSR
+- If the Discord User which the profile is linked to is in the TSR Leaderboard
+- The profiles 9 highest brawlers in Trophy League which also have:
+  - Current and highest achieved trophies
+  - The Brawlers tier
+  - Whether the brawler has a Gadget, a Star Power and/or up to 2 gears equipped
+  - The brawlers individually calculated TSR
+- If not the first request, the difference of Trophies (and TSR, if applicable) to the previous request
+- Your last and highest scanned Ranked rank.
 > [!NOTE]
-> Description to be added...
+> Ranked data is unreliable to get and will differ from expected results. View more info [here](##About-the-Brawl-Stars-API).
+- Your win rate and current win/loss streak
+- Autosync status (Available for linked profiles in Slot 1 of a user)
+- ABT, ABP, SDR, WD and SF (Read more about them in the [Glossary](#glossary))
+
+Certain information may not be shown under certain circumstances, either if they are not available or if certain conditions are (not) met.
+
+If multiple profiles are linked, all of them are requested simultaneously. Switch viewing profiles with the arrow buttons available under the sent embed.
+
 
 ### `/poll`
 > [!IMPORTANT]
 > This command is broken. It will get fixed in the future.
 
 ### `/profilelink`
-> [!NOTE]
-> Description to be added...
+Adds or removes a tag to your linked profiles or lists all of your current linked profiles (depending on what is passed in `mode`).
+
+A total of 5 profiles can be linked at once.
 
 ### `/progression`
 Shows how much resources you have to collect to be able to max out.
@@ -173,7 +213,7 @@ Randomly chooses between different options in a passed list.
 
 Seperate arguments with `,`.
 
-> [!INFO]
+> [!NOTE]
 > Avoid using leading or trailing commas, as well as commas inside arguments to prevent unexpected results.
 
 ### `/status`
@@ -194,7 +234,7 @@ Returns all Brawl Stars Profiles that are linked to the specified Discord User-I
 ### `/close`
 Ends the program. Useful if you don't have access to the host at the time.
 
-Setting `quick_restart` to `True` will skip Autosync on Startup.
+Setting `quick_restart` to `True` will skip Autosync on the next Startup.
 
 ### `/export`
 Get any file within the `shenzhia` directory. To get a file in a subdirectory, use a pattern like this: `subdirectory/file`
@@ -212,13 +252,19 @@ Fetch the Discord-Usernames of every user that has linked at least one profile. 
 
 If a username cannot be fetched (e.g. the user is not sharing a server with the bot anymore), the ID is used as the name instead.
 
+> [!TIP]
+> Normally, a link is established when a user links the profile. This command can be used to correct faulty links or renew them to update the names.
+
 ### `/reloadjson`
 Rewrites the constants that are set at the beginning of the program.
 
 > [!TIP]
-> If any additional constants are added, adding the load process within the coroutine is a good idea.
+> For devs: If any additional constants are added, adding the load process within the coroutine is a good idea.
 
 ### `/reset_ranked_elo`
+> [!NOTE]
+> This command will be removed once accurate ranked data is used.
+
 Sets the `current` key for everyone's saved ranked data to 0 (Effectively showing "Unranked").
 
 This action is irreversible unless a backup was made.
@@ -249,7 +295,13 @@ The Brawl Stars API gives out a good amount of data, but sadly, has not been upd
 The following list describes the data you can expect to get from it (and expected data unfortunately missing).
 
 > [!NOTE]
-> Time of writing: 20th Aug 2024
+> Time of writing: 25th Aug 2024
+>
+> ✅: Available
+> ⚠️: Supplemented by 3rd party API
+> ❌: Unavialable
+>
+> For now, entries marked with ⚠️ are not accessible yet.
 
 | *Data* | *Availablity* |
 | ---- | ----------- |
@@ -257,9 +309,9 @@ The following list describes the data you can expect to get from it (and expecte
 | Current total Trophies    | ✅ |
 | Highest total Trophies    | ✅ |
 | Win counts for 3v3 and SD | ✅ |
-| Fame | ❌ |
-| Win Streaks | ❌ |
-| Ranked | see later |
+| Fame | ⚠️ |
+| Win Streaks | ⚠️ |
+| Ranked | see below |
 | **Brawlers**  |  |
 | Current Trophies      | ✅ |
 | Highest Trophies      | ✅ |
@@ -268,13 +320,14 @@ The following list describes the data you can expect to get from it (and expecte
 | Gadgets, Star Powers and Gears | ✅ |
 | Hypercharges | ❌ |
 | Equipped skin | ❌ |
-| Mastery | ❌ |
+| Mastery | ⚠️ |
 | **Ranked**  |  |
 | Current Ranked Rank                | ⚠️ |
-| Highest Ranked Rank                | ❌ |
-| Current Ranked Elo                 | ❌ |
-| Highest Ranked Elo                 | ❌ |
+| Highest Ranked Rank                | ⚠️ |
+| Current Ranked Elo                 | ⚠️ |
+| Highest Ranked Elo                 | ⚠️ |
 | **Battle Log**  |  |
+| Max amount of Battles              | 25 |
 | Played Brawlers                    | ✅ |
 | Total Trophies of Players          | ✅ |
 | Brawler Trophies of Players        | ✅ |
@@ -283,5 +336,119 @@ The following list describes the data you can expect to get from it (and expecte
 
 ## Glossary
 
+### TSR
+TSR stands for **Trophy Skill Rating**. It's an attempt at making the trophy system at least express a little bit on how a players skill can be expected.
+
+TSR factors the Top 9 brawlers of a profile into account. The trophies of those brawlers are then subtracted `500`.
+
+Next, all values are calculated using this formula (`x` representing the modified trophy values):
+
+$y = 1.\overline{7}*(x^2)$
+
+Resulting values under `0` are set to `0`. Values exceeding `1,000,000` are set to `1,000,000` plus $x-750$
+
+> [!TIP]
+> Effectively, 0 points are awarded at 500 Trophies (Tier 20) and 1M at 1250 (Tier 35)
+> Any trophies over 1250 are added on top of the max TSR at a 1:1 ratio (Example: 1300 -> 1M + 50)
+
+The now 9 (probably different) scores are then weighted by calculating $y = \frac{x}{a}$, with `x` being the score and `a` being the divisor derived as follows:
+
+| Position | Divisor |
+| --- | --- |
+| #1 | 4 (25%) |
+| #2 | 8 (12.5%) |
+| #3 | 8 |
+| #4 | 8 |
+| #5 | 8 |
+| #6 | 16 (6.25% ) |
+| #7 | 16 |
+| #8 | 16 |
+| #9 | 16 |
+
+All calculated and weighted scores are now added together and result in a players TSR. Additionally, a rank is displayed representing it.
+
+| Rank | TSR-Requirements |
+| --- | --- |
+| E | ≥ 1 |
+| D | ≥ 17,778 |
+| D+ | ≥ 36,111 |
+| C | ≥ 54,444 |
+| C | ≥ 73,333 |
+| C | ≥ 92,222 |
+| B | ≥ 111,111 |
+| B | ≥ 127,407 |
+| B | ≥ 143,703 |
+| A | ≥ 160,000 |
+| A | ≥ 201,481 |
+| A | ≥ 242,962 |
+| S | ≥ 284,444 |
+| S | ≥ 364,444 |
+| S | ≥ 444,444 |
+| SS | ≥ 751,111 |
+| EX | ≥ 1,000,000 |
+
+> [!TIP]
+> The highest rank (EX) can only be obtained if all 9 brawlers are ≥1250 trophies - regardless of TSR.
+
+### SDR
+
+SDR stands for **Showdown-Ratio**, which displays the percentage of Showdown (Solo and Duo) wins compared to all wins.
+
+The calculation is as follows:
+
+$\frac{DuoShowdownWins + SoloShowdownWins}{DuoShowdownWins + SoloShowdownWins + 3v3Wins}*100$
+
+> [!TIP]
+> Commands like `/performance` and `/matchanalysis` behave differently with accounts on high SDR.
+
+### ABT/ABP
+
+ABT and ABP mean **Average Brawler Trophies** and **Average Brawler Power** respectively.
+
+*(The name should be pretty self-explanatory)*
+
 > [!NOTE]
-> This section is not written yet...
+> ABT/ABP do not get calculated for players with less than 10 brawlers.
+
+### AR
+
+AR stands for **Account Rating**. It is intended to build upon TSR to additionally indicate dedication and skill.
+
+An account can have 54 AR at most. AR is awarded as follows:
+
+| Area | AR | Max AR |
+| --- | --- | --- |
+| TSR | 1 per rank passed | 17
+| Ranked | 1 per rank passed | 19
+| SDR | $AR = \frac{\|SDR-100\|}{10}$ | 10
+| ABT | 1 AR per 2 ranks passed | 8
+
+> [!NOTE]
+> The ABT value is translated into a TSR Rank for AR evaluation.
+>
+> All AR-values are rounded down. 
+
+### WD
+
+WD stands for **Win Distribution**. It's used in the `/performance` to explain the calculated Winrate.
+
+It's displayed like this: `t > w - f`
+- `t` : 3v3 games in Battle-Log
+- `w` : Wins in Battle-Log
+- `f` : Games qualifying as "flukes" (Defeats with the target player as Star Player)
+
+> [!TIP]
+> Flukes are treated as ties. If any are present, the winrate shown will be adjusted, with the original one in parentheses.
+
+### SF
+
+> [!WARNING]
+> To set up SF, run `bs_spiciness.py` in `/extras`. There are currently no safeguards preventing the `/performance` command from failing if SF isn't set up.
+>
+> The data used for SF had to be manually entered by hand (unless any automated process concerning Brawl Stars Tier Lists is found), preferably every time the game balance changes.
+
+SF stands for **Spiciness Factor**. It's uses as a representation on how "meta" a player is playing by evaluating their top brawlers. It is by no means a measure of skill.
+
+It's calculated by the bot-owner assigning tiers to every brawler. The more "meta" a brawler is, the lower the score.
+
+For SF, the top 9 brawlers of a players are used, while higher positions are weighted more.
