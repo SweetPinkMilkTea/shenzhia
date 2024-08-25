@@ -2093,20 +2093,22 @@ async def status(ctx: interactions.SlashContext):
         except:
             response_d = "Not reachable"
         try:
-            async with session.get(url, headers=headers) as response:
+            async with session.get(url_b, headers=headers) as response:
                 response_b = response.status
         except:
             response_b = "Not reachable"
         try:
-            async with session.get(url, headers=headers) as response:
+            async with session.get(url_c, headers=headers) as response:
                 response_c = response.status
         except:
             response_c = "Not reachable"
         try:
-            async with session.get(url, headers=headers) as response:
-                response_c = response.json()["state"]
+            async with session.get(url_d, headers=headers) as response:
+                response_e = await response.json()
+                response_e = response_e["state"]
         except:
-            response_c = "Not reachable"
+            raise Exception()
+            response_e = "Not reachable"
 
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
@@ -2117,7 +2119,7 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="API-Node [Battle-History]",value=f"<:qito_error:1137124869713166416> [{response_b}]" if response_b != 200 else f"<:qito_connected:1140550294313373766> [{response_b}]",inline=True)
     embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="Extension API",value=f"<:qito_error:1137124869713166416> [{response_d}]" if response_d != 0 else f"<:qito_connected:1140550294313373766> [{response_d}]",inline=True)
+    embed.add_field(name="Extension API",value=f"<:qito_error:1137124869713166416> [{response_e}]" if response_e != 0 else f"<:qito_connected:1140550294313373766> [{response_e}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.set_footer(text="Shenzhia",
