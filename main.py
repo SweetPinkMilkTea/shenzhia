@@ -932,8 +932,9 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 data = await response.json()
-            async with session.get(url2, headers=headers) as response:
+            async with session.get(url2) as response:
                 su_data = await response.json()
+                print(su_data)
         try:
             print(data["reason"])
             await ctx.send(send_api_error(data["reason"]),ephemeral=True)
@@ -2077,6 +2078,7 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
 async def status(ctx: interactions.SlashContext):
     await ctx.defer()
     tag = urllib.parse.quote("#8VGY00G9")
+    url_d = f"https://api.hpdevfox.ru/profile/8VGY00G9"
     url_c = "https://api.brawlstars.com/v1/brawlers"
     url_b = f"https://api.brawlstars.com/v1/players/{tag}/battlelog"
     url = f"https://api.brawlstars.com/v1/players/{tag}/"
@@ -2100,6 +2102,11 @@ async def status(ctx: interactions.SlashContext):
                 response_c = response.status
         except:
             response_c = "Not reachable"
+        try:
+            async with session.get(url, headers=headers) as response:
+                response_c = response.json()["state"]
+        except:
+            response_c = "Not reachable"
 
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
@@ -2109,6 +2116,8 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="API-Node [Profile]",value=f"<:qito_error:1137124869713166416> [{response_d}]" if response_d != 200 else f"<:qito_connected:1140550294313373766> [{response_d}]",inline=True)
     embed.add_field(name="API-Node [Battle-History]",value=f"<:qito_error:1137124869713166416> [{response_b}]" if response_b != 200 else f"<:qito_connected:1140550294313373766> [{response_b}]",inline=True)
     embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
+    embed.add_field(name="-----",value=" ",inline=False)
+    embed.add_field(name="Extension API",value=f"<:qito_error:1137124869713166416> [{response_d}]" if response_d != 0 else f"<:qito_connected:1140550294313373766> [{response_d}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.set_footer(text="Shenzhia",
@@ -2309,8 +2318,8 @@ async def help(ctx: interactions.SlashContext):
     embed = interactions.Embed(title="Get started (BETA)",
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
-    embed.add_field(name="View the Shenzhia GitHub page",value="*It contains all the code and useful documentation*\n[Visit the Repository here](<https://github.com/SweetPinkMilkTea/shenzhia>)")
-    ctx.send(embed=embed)
+    embed.add_field(name="View documentation",value="- [Main page](<https://github.com/SweetPinkMilkTea/shenzhia>)\n- [Commands](<https://github.com/SweetPinkMilkTea/shenzhia?tab=readme-ov-file#regular-commands>)\n- [Terms explained](<https://github.com/SweetPinkMilkTea/shenzhia?tab=readme-ov-file#glossary>)")
+    await ctx.send(embed=embed)
 
 # -------------------
 # CALLBACKS
