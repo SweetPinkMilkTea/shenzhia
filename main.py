@@ -172,10 +172,12 @@ while True:
         with open("bs_api_token.json", "w") as f:
             json.dump(bs_api_dict,f)
     except:
+        brawlerIDs = {}
         maxGadgets = maxStarpower = maxGear = maxCurrency = maxCurrencyAdv = 0
         if not backup:
             maxBrawlers = len(data["items"])
             for i in data["items"]:
+                brawlerIDs[i["id"]] = i['name']
                 maxGadgets += len(i["gadgets"])
                 maxStarpower += len(i["starPowers"])
                 maxCurrency += 20245
@@ -824,7 +826,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set one.")
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set one.")
         return
     for i in tag:
         try:
@@ -913,7 +915,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set it.",ephemeral=True)
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     embeds = []
     for tag_element in tag:
@@ -922,6 +924,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             bsdict[tag_element] = {"history":[],"updates":False}
         url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag_element)}/"
+        url2 = f"https://api.hpdevfox.ru/profile/{tag_element.replace('#','')}"
         headers = {
             "Accept": "application/json",
             "Authorization": f"Bearer {bs_api_token}"
@@ -929,6 +932,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 data = await response.json()
+            async with session.get(url2, headers=headers) as response:
+                su_data = await response.json()
         try:
             print(data["reason"])
             await ctx.send(send_api_error(data["reason"]),ephemeral=True)
@@ -944,6 +949,18 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 return
             except:
                 pass
+        # Mastery
+        mastery_dict = {}
+        for i in su_data["response"]["Heroes"]:
+            mastery_dict[brawlerIDs[i["Character"]]] = i["Mastery"]
+        # Ranked
+        load_from_archive = False
+        try:
+            i = su_data["response"]["Stats"]
+            ranked_dict = {"rank_current":i["23"],"rank_best":i["22"],"score_current":i["24"],"score_best":i["25"]}
+        except:
+            raise Exception()
+            load_from_archive = True
         brawlerlist = data["brawlers"]
         def brawlersort(a):
             return a["trophies"]
@@ -1212,7 +1229,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 tsr_display = ""
                 tsr_val = -1
             nl = "\n"
-            debug_ext = ""
             lock_brawler_overview = False
             try:
                 bname = brawlerlist[i]['name'].upper()
@@ -1221,11 +1237,25 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 lock_brawler_overview = True
             if not lock_brawler_overview:
                 try:
+                    masterypoints = mastery_dict[bname]
+                    m_index = 0
+                    for j in [300,800,1500,2600,4000,5800,10300,16800,24800]:
+                        if masterypoints >= j:
+                            m_index += 1
+                        else:
+                            break
+                    if m_index not in [0,9]:
+                        multiplier = m_index%3 if m_index%3 != 0 else 3
+                        mastery_display = f"{['<:bronzestar:1153418350970536007>','<:silverstar:1153418444486758513>','<:goldstar:1153418516205162577>'][(m_index-1)//3]}" * multiplier
+                    elif m_index == 9:
+                        mastery_display = f"{'<:goldstar:1153418516205162577>'*3} + {masterypoints - 24800}"
+                    else:
+                        mastery_display = f""
                     gadgetindicator = "<:gadget:1228965764631892069>" if len(brawlerlist[i]["gadgets"]) > 0 else "<:no_util:1228965782390702201>"
                     spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{debug_ext}",inline=True)
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl}{mastery_display}",inline=True)
                 except Exception as e:
                     embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
                     print(f"{e} : {str(e)}")
@@ -1253,15 +1283,18 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     tsrstr = "+" + tsrstr
             embed.add_field(name=f"FLUCTUATION",value=f"<t:{fluc_list[-2]['time']}:R>\n{sessionstr} / {tsrstr}",inline=True)
         #Power League
-        with open("bs_powerleague.json","r") as f:
-            pl_saves = json.load(f)
-        if tag_element in pl_saves.keys():
-            pl_index_best = pl_saves[tag_element]["best"]
-            pl_index_current = pl_saves[tag_element]["current"]
-            rlist = ["<:tranknone:1134890614635372675>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_d:1262542011576356915>","<:rank_d_plus:1262542055326879858>","<:rank_c_minus:1262542122469294121>","<:rank_c:1262542167440756847>","<:rank_c_plus:1262542219714494484>","<:rank_b_minus:1262542285644501095>","<:rank_b:1262543019417014333>","<:rank_b_plus:1262543136291426394>","<:rank_a_minus:1262543188908839022>","<:rank_a:1262543236518383616>","<:rank_a_plus:1262543274506457089>","<:rank_s_minus:1263948719577894922> ","<:rank_s:1263948731167015013>","<:rank_s_plus:1263948744286802021>","<:rank_ss:1263953646245384274>","<:trankx:1133686283093426256>"]
-            embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}\nBest: {rlist[pl_index_best]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_best]}",inline=True)
+        rlist = ["<:tranknone:1134890614635372675>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_d:1262542011576356915>","<:rank_d_plus:1262542055326879858>","<:rank_c_minus:1262542122469294121>","<:rank_c:1262542167440756847>","<:rank_c_plus:1262542219714494484>","<:rank_b_minus:1262542285644501095>","<:rank_b:1262543019417014333>","<:rank_b_plus:1262543136291426394>","<:rank_a_minus:1262543188908839022>","<:rank_a:1262543236518383616>","<:rank_a_plus:1262543274506457089>","<:rank_s_minus:1263948719577894922> ","<:rank_s:1263948731167015013>","<:rank_s_plus:1263948744286802021>","<:rank_ss:1263953646245384274>","<:trankx:1133686283093426256>"]
+        if load_from_archive:
+            with open("bs_powerleague.json","r") as f:
+                pl_saves = json.load(f)
+            if tag_element in pl_saves.keys():
+                pl_index_best = pl_saves[tag_element]["best"]
+                pl_index_current = pl_saves[tag_element]["current"]
+                embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}\nBest: {rlist[pl_index_best]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_best]}",inline=True)
+            else:
+                embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
         else:
-            embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
+            embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[ranked_dict['rank_current']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_current']]} ({ranked_dict['score_current']})\nBest: {rlist[ranked_dict['rank_best']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_best']]} ({ranked_dict['score_best']})",inline=True)
         #Win Rate
         if nolog:
             embed.add_field(name=f"RECENT WIN-RATE",value=f"<:warning:1229332347086704661> Unavailable...",inline=True)
@@ -1409,7 +1442,7 @@ async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: in
     with open("bs_hc_info.json","r") as f:
         hcinfo = json.load(f)
     if str(ctx.author.id) not in tags.keys():
-        await ctx.send(f"<:warning:1229332347086704661> Link your BS-Account with '/bslink' first.",ephemeral=True)
+        await ctx.send(f"<:warning:1229332347086704661> Link your BS-Account with '/profilelink' first.",ephemeral=True)
         return
     if tagid > len(tags[str(ctx.author.id)]):
         await ctx.send(f"<:warning:1229332347086704661> Provided Tag-ID is out of range.",ephemeral=True)
@@ -1447,7 +1480,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
     if str(ctx.author.id) not in tags:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/bslink' to set it.",ephemeral=True)
+        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     tag = tag.upper()
     if tag == "":
