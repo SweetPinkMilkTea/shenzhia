@@ -934,7 +934,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 data = await response.json()
             async with session.get(url2) as response:
                 su_data = await response.json()
-                print(su_data)
         try:
             print(data["reason"])
             await ctx.send(send_api_error(data["reason"]),ephemeral=True)
@@ -1948,16 +1947,13 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
     await ctx.send(embed=embed)
 
 @interactions.slash_command(name="history", description="View a recorded graph of your stat development. (Requires linked profile)")
-@interactions.slash_option(name="timespan", description="Whether to show the last 30 days or the complete graph if the full history is more than 30 days long", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value=""),interactions.SlashCommandChoice(name="All Time",value="full")])
-@interactions.slash_option(name="dataset", description="What dataset to use.", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Trophies",value="t"),interactions.SlashCommandChoice(name="TSR",value="r")])
+@interactions.slash_option(name="timespan", description="How far back the graph should go", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Last 30 days",value="30"),interactions.SlashCommandChoice(name="Last 90 days",value="90"),interactions.SlashCommandChoice(name="All Time",value="full")])
+@interactions.slash_option(name="dataset", description="What dataset to use.", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Trophies",value="value"),interactions.SlashCommandChoice(name="TSR",value="tsr")])
 @interactions.slash_option(name="graphcolor", description="Set the color of the graph. Use Hex-codes for this (#xxxxxx).", required=False, opt_type=interactions.OptionType.STRING, min_length=7, max_length=7)
 @interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
 async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, graphcolor: str = "", tagid: int = 1):
     await ctx.defer()
     limiter = timespan != "full"
-    if dataset == "r":
-        await ctx.send("<:warning:1229332347086704661> This feature is under development.")
-        return
     try:
         with open("bs_data.json") as f:
             savedata = json.load(f)
@@ -1980,7 +1976,6 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             return (r * 299 + g * 587 + b * 114) / 1000
 
         z = 1
-        # <todo> Check if Tag has savedata
         if len(savedata[i]["history"]) > 3:
             if graphcolor == "" or (not bool(re.match(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$', graphcolor))):
                 colorcode = f"#{random.randint(0,999999):06}"
@@ -1990,8 +1985,13 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             ylist = []
             xOrigin = savedata[i]['history'][0]["time"]
             for k in savedata[i]['history']:
-                xlist.append((k["time"] - xOrigin)/86400)
-                ylist.append(k["value"])
+                if dataset in k.keys():
+                    if dataset == "value":
+                        xlist.append((k["time"] - xOrigin)/86400)
+                        ylist.append(k[dataset])
+                    elif dataset == "tsr" and k[dataset] != -1:
+                        xlist.append((k["time"] - xOrigin)/86400)
+                        ylist.append(k[dataset])
             brightness = calculate_brightness(colorcode)
             br_threshold = 128
             if brightness < br_threshold:
@@ -2001,9 +2001,9 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             plt.rcParams['axes.axisbelow'] = True
             plt.rcParams["font.family"] = "Torus"
             #plt.rcParams["font.weight"] = "bold"
-            plt.plot(xlist,ylist,color=colorcode,marker="x")
+            plt.step(xlist,ylist,color=colorcode,where="post")
             plt.xlabel(f"DAYS SINCE FIRST RECORDING\n({datetime.datetime.utcfromtimestamp(savedata[i]['history'][0]['time']).strftime('%d.%m.%Y')})")
-            plt.ylabel("TROPHIES")
+            plt.ylabel({"value":"TROPHIES","tsr":"TSR"}[dataset])
             try:
                 plt.title(f"Trophy-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
             except:
@@ -2026,18 +2026,22 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                 stepunit *= 2
                 markers = int(max(ylist)/stepunit)+2 - int(min(ylist)/stepunit)
             if not limiter:
-                plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                if dataset == "value":
+                    plt.xlim(0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                else:
+                    plt.xlim(int(min(xlist))-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
                 plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
+                adjusted_lim = min(ylist)
             else:
-                plt.xlim(left=max(xlist)-30 if max(xlist) > 30 else 0-margin_negative)
-                #plt.xlim(max(xlist)-30 if max(xlist) > 30 else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
+                timespan = int(timespan)
+                plt.xlim(left=max(xlist)-timespan if max(xlist) > timespan else 0-margin_negative)
+                #plt.xlim(max(xlist)-timespan if max(xlist) > timespan else 0-margin_negative,round(max(xlist))+1+int(max(xlist)/10))
                 plt.yticks(np.arange(int(min(ylist)/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
-                if max(xlist) > 30:
+                if max(xlist) > timespan:
                     for k in reversed(xlist):
-                        if max(xlist) - 30 > k:
-                            breakstamp = k
+                        if max(xlist) - timespan > k:
                             break
-                    adjusted_lim = ylist[xlist.index(breakstamp)]
+                    adjusted_lim = ylist[xlist.index(k)]
                     plt.ylim(int(adjusted_lim/500)*500,(int(max(ylist)/500)+2)*500)
                     stepunit = 500
                     markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
@@ -2045,9 +2049,12 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                         stepunit *= 2
                         markers = int(max(ylist)/stepunit)+2 - int(adjusted_lim/stepunit)
                     plt.yticks(np.arange(int(adjusted_lim/500)*500, (int(max(ylist)/500)+2)*500+1, stepunit))
-            prev_y = 0
+            prev = (999999,999999)
+            xmin, xmax, ymin, ymax = plt.axis()
+            minimun_distance = np.sqrt((xmax - xmin)**2 + (ymax - ymin)**2) * 0.1
             for x,y in zip(xlist,ylist):
-                if abs(y - prev_y) > (max(ylist) - min(ylist))/10 or xlist.index(x) == len(xlist)-1:
+                distance = np.sqrt((x - prev[0])**2 + (y - prev[1])**2)
+                if distance >= minimun_distance or xlist.index(x) == len(xlist)-1:
                     if not((xlist.index(x) == len(xlist)-1)):
                         plt.annotate(str(y), # annotation text
                                     (x,y), # these are the coordinates to position the label
@@ -2055,19 +2062,20 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
                                     color=colorcode,
                                     xytext=(0,10), # distance from text to points (x,y)
                                     ha='center') # horizontal alignment can be left, right or center
-                        prev_y = y
+                        prev = (x,y)
                     else:
                         plt.annotate(str(y), # annotation text
                                     (x,y), # these are the coordinates to position the label
                                     textcoords="offset points", # how to position the text
-                                    xytext=(3,0), # distance from text to points (x,y)
+                                    xytext=(5,0), # distance from text to points (x,y)
                                     ha='left', # horizontal alignment can be left, right or center
                                     va='center',
                                     color=colorcode,
                                     bbox=dict(boxstyle="square,pad=0.3",fc="black" if brightness > br_threshold else "white", ec=colorcode, lw=1)) 
             plt.savefig(f"graphs/{i}_{timespan}_{dataset}.png", bbox_inches="tight")
+            plt.close()
         else:
-            await ctx.send("<:warning:1229332347086704661> No graph available yet. Check back after more data has been collected.\n-# Hint: Turn on AutoSync to get your stats automatically saved!",ephemeral=True)
+            await ctx.send("<:warning:1229332347086704661> No data available yet.\n-# Use the bot more!",ephemeral=True)
             return
         file = interactions.File(f"graphs/{i}_{timespan}_{dataset}.png")
         await ctx.send(f"-# Activate AutoSync via `/autosync` to get more data automatically.",file=file)
