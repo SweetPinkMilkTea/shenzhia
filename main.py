@@ -932,8 +932,12 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 data = await response.json()
-            async with session.get(url2) as response:
-                su_data = await response.json()
+            del headers["Authorization"]
+            try:
+                async with session.get(url2, headers=headers,timeout=10) as response:
+                    su_data = await response.json()
+            except:
+                su_data = 0
         try:
             print(data["reason"])
             await ctx.send(send_api_error(data["reason"]),ephemeral=True)
@@ -951,15 +955,15 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 pass
         # Mastery
         mastery_dict = {}
-        for i in su_data["response"]["Heroes"]:
-            mastery_dict[brawlerIDs[i["Character"]]] = i["Mastery"]
+        if su_data != 0:
+            for i in su_data["response"]["Heroes"]:
+                mastery_dict[brawlerIDs[i["Character"]]] = i["Mastery"]
         # Ranked
         load_from_archive = False
         try:
             i = su_data["response"]["Stats"]
             ranked_dict = {"rank_current":i["23"],"rank_best":i["22"],"score_current":i["24"],"score_best":i["25"]}
         except:
-            raise Exception()
             load_from_archive = True
         brawlerlist = data["brawlers"]
         def brawlersort(a):
@@ -1237,7 +1241,10 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 lock_brawler_overview = True
             if not lock_brawler_overview:
                 try:
-                    masterypoints = mastery_dict[bname]
+                    try:
+                        masterypoints = mastery_dict[bname]
+                    except:
+                        masterypoints = 0
                     m_index = 0
                     for j in [300,800,1500,2600,4000,5800,10300,16800,24800]:
                         if masterypoints >= j:
@@ -1255,7 +1262,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
                     gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl}{mastery_display}",inline=True)
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl if su_data != 0 else ''}{mastery_display}",inline=True)
                 except Exception as e:
                     embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
                     print(f"{e} : {str(e)}")
@@ -1290,7 +1297,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             if tag_element in pl_saves.keys():
                 pl_index_best = pl_saves[tag_element]["best"]
                 pl_index_current = pl_saves[tag_element]["current"]
-                embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}\nBest: {rlist[pl_index_best]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_best]}",inline=True)
+                embed.add_field(name=f"RANKED DIVISION",value=f"Approximated Current:\n{rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}",inline=True)
             else:
                 embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
         else:
@@ -1315,6 +1322,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             asyc = "---"
         embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2)}%",inline=False)
+        if su_data == 0:
+            embed.add_field(name="<:warning:1229332347086704661>", value="Extension-API is down. Certain data is currently unavailable.")
         if str(ctx.author_id) not in tags:
             embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embeds.append(embed)
