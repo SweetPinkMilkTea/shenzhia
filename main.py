@@ -934,7 +934,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 data = await response.json()
             del headers["Authorization"]
             try:
-                async with session.get(url2, headers=headers,timeout=10) as response:
+                async with session.get(url2, headers=headers,timeout=5) as response:
                     su_data = await response.json()
             except:
                 su_data = 0
@@ -2120,11 +2120,10 @@ async def status(ctx: interactions.SlashContext):
         except:
             response_c = "Not reachable"
         try:
-            async with session.get(url_d, headers=headers) as response:
+            async with session.get(url_d, headers=headers, timeout=5) as response:
                 response_e = await response.json()
                 response_e = response_e["state"]
         except:
-            raise Exception()
             response_e = "Not reachable"
 
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
