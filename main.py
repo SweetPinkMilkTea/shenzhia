@@ -721,10 +721,9 @@ async def enable_autosync(ctx: interactions.SlashContext):
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
 
-@interactions.slash_command(name="profilelink", description="Set your own tag, so you can quickly use commands and access other special utility.")
-@interactions.slash_option(name="method", description="Add/Remove a tag or view currently linked ones", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Add",value="1"),interactions.SlashCommandChoice(name="Remove",value=""),interactions.SlashCommandChoice(name="View",value="A")])
-@interactions.slash_option(name="tag", description="Your tag, with '#' in front. (Reqired on add/remove)", required=False, opt_type=interactions.OptionType.STRING)
-async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = ""):
+@interactions.slash_command(name="profilelink", sub_cmd_description="Set your own tag, so you can quickly use commands and access other special utility.", sub_cmd_name="add")
+@interactions.slash_option(name="tag", description="Your tag, with '#' in front.", required=True, opt_type=interactions.OptionType.STRING)
+async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
     await ctx.defer()
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
@@ -732,83 +731,97 @@ async def profilelink(ctx: interactions.SlashContext,method: str ,tag: str = "")
         bsdict = json.load(f)
     with open("tsr_best.json","r") as f:
         tsrbest = json.load(f)
-    if method == "A":
-        if str(ctx.author.id) not in tags:
-            await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.",ephemeral=True)
+    with open("dc_id_rel.json") as f:
+        name_dict = json.load(f)
+    name = await bot.fetch_user(int(ctx.author_id))
+    try:
+        name_dict[int(ctx.author_id)] = str(name)
+    except:
+        name_dict[int(ctx.author_id)] = int(ctx.author_id)
+    with open("dc_id_rel.json","w") as f:
+        json.dump(name_dict,f) 
+    if str(ctx.author.id) in tags:
+        if len(tags[str(ctx.author.id)]) >= 5:
+            await ctx.send(f"<:warning:1229332347086704661> Max # of links created.",ephemeral=True)
             return
-        embed = interactions.Embed(title=f"LINKED PROFILES",
-                        color=0x6f07b4,
-                        timestamp=datetime.datetime.now())
-        for i in range(5):
-            if i > len(tags[str(ctx.author.id)]) - 1:
-                embed.add_field(name=f"[{i+1}] - ///",value="*Empty slot*")
-            else:
+        if tag.upper() in tags[str(ctx.author.id)]:
+            await ctx.send(f"<:warning:1229332347086704661> You already linked this tag to yourself.",ephemeral=True)
+            return
+        saved_tags = []
+        for i in tags:
+            saved_tags += tags[i] if i != str(ctx.author.id) else []
+        if tag.upper() in saved_tags:
+            await ctx.send(f"<:warning:1229332347086704661> This tag has been blocked for linking as it has been linked to somebody else.",ephemeral=True)
+            return
+    url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag)}/"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {bs_api_token}"
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 429:
+                await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                return
+            if response.status != 200:
+                await ctx.send(f"<:warning:1229332347086704661> '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
+                return
+    try:
+        tags[str(ctx.author.id)].append(tag.upper())
+    except:
+        tags[str(ctx.author.id)] = [tag.upper()]
+    await ctx.send("<:info:1229350084299194388> Your profile was linked.")
+    
+@interactions.slash_command(name="profilelink", sub_cmd_description="Remove a tag you have set previously.", sub_cmd_name="remove")
+@interactions.slash_option(name="tag", description="Your tag, with '#' in front.", required=True, opt_type=interactions.OptionType.STRING)
+async def profilelinkremove(ctx: interactions.SlashContext, tag: str = ""):
+    await ctx.defer()
+    with open("bs_tags.json","r") as f:
+        tags = json.load(f)
+    with open("bs_data.json","r") as f:
+        bsdict = json.load(f)
+    with open("tsr_best.json","r") as f:
+        tsrbest = json.load(f)
+    if str(ctx.author.id) not in tags:
+        await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.")
+        return
+    if tag.upper() not in tags[str(ctx.author.id)]:
+        await ctx.send(f"<:warning:1229332347086704661> This tag is not linked to your account.")
+        return
+    tags[str(ctx.author.id)].remove(tag.upper())
+    await ctx.send(f"<:info:1229350084299194388> Removed successfully.")
+    with open("bs_tags.json","w") as f:
+        json.dump(tags,f)
+    
+@interactions.slash_command(name="profilelink", sub_cmd_description="View your linked tags.", sub_cmd_name="view")
+async def profilelinkview(ctx: interactions.SlashContext):
+    await ctx.defer()
+    with open("bs_tags.json","r") as f:
+        tags = json.load(f)
+    with open("bs_data.json","r") as f:
+        bsdict = json.load(f)
+    with open("tsr_best.json","r") as f:
+        tsrbest = json.load(f)
+    if str(ctx.author.id) not in tags:
+        await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.",ephemeral=True)
+        return
+    embed = interactions.Embed(title=f"LINKED PROFILES",
+                    color=0x6f07b4,
+                    timestamp=datetime.datetime.now())
+    for i in range(5):
+        if i > len(tags[str(ctx.author.id)]) - 1:
+            embed.add_field(name=f"[{i+1}] - ///",value="*Empty slot*")
+        else:
+            try:
+                embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value=f"Most recent Trophies: {bsdict[tags[str(ctx.author.id)][i]]['history'][-1]['value']:,} / Best TSR: {tsrbest[tags[str(ctx.author.id)][i]]:,}")
+            except:
                 try:
                     embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value=f"Most recent Trophies: {bsdict[tags[str(ctx.author.id)][i]]['history'][-1]['value']:,} / Best TSR: {tsrbest[tags[str(ctx.author.id)][i]]:,}")
                 except:
-                    try:
-                        embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value=f"Most recent Trophies: {bsdict[tags[str(ctx.author.id)][i]]['history'][-1]['value']:,} / Best TSR: {tsrbest[tags[str(ctx.author.id)][i]]:,}")
-                    except:
-                        embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value="*No records*")
-        embed.set_footer(text="Shenzhia",
-                        icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
-        await ctx.send(embed=embed)
-        return
-    if tag == "":
-        await ctx.send(f"<:warning:1229332347086704661> 'tag' is required.",ephemeral=True)
-        return
-    if method:
-        with open("dc_id_rel.json") as f:
-            name_dict = json.load(f)
-        name = await bot.fetch_user(int(ctx.author_id))
-        try:
-            name_dict[int(ctx.author_id)] = str(name)
-        except:
-            name_dict[int(ctx.author_id)] = int(ctx.author_id)
-        with open("dc_id_rel.json","w") as f:
-            json.dump(name_dict,f) 
-        if str(ctx.author.id) in tags:
-            if len(tags[str(ctx.author.id)]) >= 5:
-                await ctx.send(f"<:warning:1229332347086704661> Max # of links created.",ephemeral=True)
-                return
-            if tag.upper() in tags[str(ctx.author.id)]:
-                await ctx.send(f"<:warning:1229332347086704661> You already linked this tag to yourself.",ephemeral=True)
-                return
-            saved_tags = []
-            for i in tags:
-                saved_tags += tags[i] if i != str(ctx.author.id) else []
-            if tag.upper() in saved_tags:
-                await ctx.send(f"<:warning:1229332347086704661> This tag has been blocked for linking as it has been linked to somebody else.",ephemeral=True)
-                return
-        url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag)}/"
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {bs_api_token}"
-        }
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as response:
-                if response.status == 429:
-                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
-                    return
-                if response.status != 200:
-                    await ctx.send(f"<:warning:1229332347086704661> '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
-                    return
-        try:
-            tags[str(ctx.author.id)].append(tag.upper())
-        except:
-            tags[str(ctx.author.id)] = [tag.upper()]
-        await ctx.send("<:info:1229350084299194388> Your profile was linked.")
-    else:
-        if str(ctx.author.id) not in tags:
-            await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.")
-            return
-        if tag.upper() not in tags[str(ctx.author.id)]:
-            await ctx.send(f"<:warning:1229332347086704661> This tag is not linked to your account.")
-            return
-        tags[str(ctx.author.id)].remove(tag.upper())
-        await ctx.send(f"<:info:1229350084299194388> Removed successfully.")
-    with open("bs_tags.json","w") as f:
-        json.dump(tags,f)
+                    embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value="*No records*")
+    embed.set_footer(text="Shenzhia",
+                    icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
+    await ctx.send(embed=embed)
 
 @interactions.slash_command(name="bling", description="Look for a player's projected Bling gain and Trophy Reset.")
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
