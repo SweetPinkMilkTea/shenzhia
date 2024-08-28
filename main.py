@@ -979,12 +979,16 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         with open("bs_spicyness.json") as f:
             spdict = json.load(f)
         ex_certified = True
+        excludeSF = False
         for i in range(9):
             try:
                 pplist.append(brawlerlist[i]["trophies"]-500 if brawlerlist[i]["trophies"]-500 > 0 else 0)
-                spice += spdict[brawlerlist[i]["name"]] / [2,2,2,1,1,1,0.5,0.5,0.5][i]
+                try:
+                    spice += spdict[brawlerlist[i]["name"]] / [2,2,2,1,1,1,0.5,0.5,0.5][i]
+                except:
+                    excludeSF = True
             except:
-                pass
+                excludeSF = True
         if len(pplist) == 9 and min(pplist) < 750:
             ex_certified = False
         ppscore = 0
@@ -1321,7 +1325,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 raise Exception()
         except:
             asyc = "---"
-        embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2)}%",inline=False)
+        embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2) if not excludeSF else '---'}%",inline=False)
         if su_data == 0:
             embed.add_field(name="<:warning:1229332347086704661>", value="Extension-API is down. Certain data is currently unavailable.")
         if str(ctx.author_id) not in tags:
