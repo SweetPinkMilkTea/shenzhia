@@ -771,6 +771,8 @@ async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
     except:
         tags[str(ctx.author.id)] = [tag.upper()]
     await ctx.send("<:info:1229350084299194388> Your profile was linked.")
+    with open("bs_tags.json","w") as f:
+        json.dump(tags,f)
     
 @interactions.slash_command(name="profilelink", sub_cmd_description="Remove a tag you have set previously.", sub_cmd_name="remove")
 @interactions.slash_option(name="tag", description="Your tag, with '#' in front.", required=True, opt_type=interactions.OptionType.STRING)
