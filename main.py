@@ -2032,10 +2032,11 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             plt.step(xlist,ylist,color=colorcode,where="post")
             plt.xlabel(f"DAYS SINCE FIRST RECORDING\n({datetime.datetime.utcfromtimestamp(savedata[i]['history'][0]['time']).strftime('%d.%m.%Y')})")
             plt.ylabel({"value":"TROPHIES","tsr":"TSR"}[dataset])
+            subject = {'value':'Trophy','tsr':'TSR'}[dataset]
             try:
-                plt.title(f"Trophy-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
+                plt.title(f"{subject}-Progression for '{translatenames[str(ctx.author_id)]}'/{i}")
             except:
-                plt.title(f"Trophy-Progression for {i}")
+                plt.title(f"{subject}-Progression for {i}")
             if brightness > br_threshold:
                 plt.grid(which="major", color='gray')
                 plt.grid(which="minor", color='#222222', linestyle="dashed")
