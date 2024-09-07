@@ -39,7 +39,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = ["dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","listing.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json","polling.json"]
+req_files = ["dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -101,8 +101,6 @@ with open("verbose_silence.json") as f:
         silence = json.load(f)["dur"]
     except:
         silence = 0
-with open("polling.json") as f:
-    polling = json.load(f)
 with open("dev_env.json") as f:
     dev_env = json.load(f)
     logger = int(dev_env["loggingchannel"])
@@ -591,8 +589,6 @@ async def reloadjson(ctx: interactions.SlashContext):
         dsn = json.load(f)["main"]
     with open("verbose_silence.json") as f:
         silence = json.load(f)["dur"]
-    with open("polling.json") as f:
-        polling = json.load(f)
     await ctx.send("Done.")
 
 @interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[scope])
@@ -696,8 +692,7 @@ async def roll(ctx: interactions.SlashContext, maximum: int, multiplier: int = 1
     await ctx.send(f"```\n@{maximum} // x{multiplier}\n```\n{output}")
 
 @interactions.slash_command(name="shuffle", description="Get a random item from a specified list.")
-@interactions.slash_option(name="id", description="Identifier of a list. Keep empty to make your own.", required=False, opt_type=interactions.OptionType.STRING)
-async def shuffle(ctx: interactions.SlashContext, id: str = ""):
+async def shuffle(ctx: interactions.SlashContext):
     list_modal = interactions.Modal(interactions.ShortText(label="List to shuffle", placeholder="Seperate items with ','!", custom_id="userinput"), title="List-Shuffle", custom_id="shuffle")
     await ctx.send_modal(modal=list_modal)
 
@@ -2178,163 +2173,6 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
         output = "<:qito_error:1137124869713166416> Access to imgur-API was denied. Ask Qi to look into it."
     await ctx.send(output,ephemeral=hidden)
 
-@interactions.slash_command(name="listing", description="Join a listing for an event or similar.")
-@interactions.slash_option(name="mode", description="What do you want to do?", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Join",value="+"),interactions.SlashCommandChoice(name="Leave",value="-"),interactions.SlashCommandChoice(name="View",value="/"),interactions.SlashCommandChoice(name="[ADM] Clear",value="*"),interactions.SlashCommandChoice(name="[ADM] Lock",value="**"),interactions.SlashCommandChoice(name="[ADM] Restrict",value="***")])
-async def listing(ctx: interactions.SlashContext, mode: str):
-    await ctx.defer()
-    listadmins = ["@space.invader","@flyingline","@pink_milk_tea"]
-    user = str(ctx.author)
-    guildid = str(ctx.guild.id)
-    with open("listing.json") as f:
-        listing = json.load(f)
-    with open("bs_tags.json") as f:
-        tags = json.load(f)
-    if guildid not in listing.keys():
-        listing[guildid] = {"users":[],"state":True,"restrict":False}
-    if mode == "+":
-        if (datetime.datetime.now(datetime.timezone.utc) - ctx.author.created_at).days < 30:
-            await ctx.send("<:warning:1229332347086704661> This account is too young to join a list.")
-            return
-        if listing[guildid]["state"] == False:
-            await ctx.send("<:warning:1229332347086704661> List is closed.")
-            return
-        if listing[guildid]["restrict"] == True and str(ctx.author.id) not in tags.keys():
-            await ctx.send("<:warning:1229332347086704661> List is restricted to linked BS-Accounts only. Connect yours first via `sh!bslink #TAG`.")
-            return
-        try:
-            if user not in listing[guildid]["users"]:
-                listing[guildid]["users"].append(user)
-            else:
-                await ctx.send("<:warning:1229332347086704661> Already in list.",ephemeral=True)
-                return
-        except:
-            listing[guildid]["users"] = [user]
-        await ctx.send("Added to list.")
-    if mode == "-":
-        try:
-            listing[guildid]["users"].remove(user)
-        except:
-            await ctx.send("<:warning:1229332347086704661> User not in list.",ephemeral=True)
-            return
-        await ctx.send("Removed from list.")
-    if mode == "/":
-        try:
-            guildlist = listing[guildid]["users"]
-            if len(guildlist) == 0:
-                raise Exception()
-            await ctx.send(f"**Current list:**\n{guildlist}\n**Length:** {len(guildlist)}")
-        except:
-            await ctx.send(f"<:warning:1229332347086704661> No list available right now.")
-    if mode == "*":
-        if not user in listadmins:
-            await ctx.send("<:warning:1229332347086704661> No permissions to use this command.",ephemeral=True)
-            return
-        listing[guildid]["users"] = []
-        await ctx.send("List cleared.")
-    if mode == "**":
-        if not user in listadmins:
-            await ctx.send("<:warning:1229332347086704661> No permissions to use this command.",ephemeral=True)
-            return
-        listing[guildid]["state"] = False if listing[guildid]["state"] == True else True
-        await ctx.send(f"List state: {listing[guildid]['state']}.")
-    with open("listing.json", "w") as f:
-        json.dump(listing,f)
-    if mode == "***":
-        if not user in listadmins:
-            await ctx.send("<:warning:1229332347086704661> No permissions to use this command.",ephemeral=True)
-            return
-        listing[guildid]["restrict"] = False if listing[guildid]["restrict"] == True else True
-        await ctx.send(f"List restrict: {listing[guildid]['restrict']}.")
-    with open("listing.json", "w") as f:
-        json.dump(listing,f)
-
-@interactions.slash_command(name="poll", description="Vote on topics set by admins.")
-@interactions.slash_option(name="mode", description="What do you want to do?", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Vote",value="+"),interactions.SlashCommandChoice(name="Info",value="*"),interactions.SlashCommandChoice(name="[ADM] Visibility",value="*+"),interactions.SlashCommandChoice(name="[ADM] Delete",value="-"),interactions.SlashCommandChoice(name="[ADM] Set",value="**")])
-async def poll(ctx: interactions.SlashContext, mode: str):
-    global polling
-    await ctx.defer(ephemeral=True)
-    listadmins = ["@space.invader","@flyingline","@pink_milk_tea"]
-    user = str(ctx.author.id)
-    guildid = str(ctx.guild.id)
-    if str(guildid) not in polling.keys():
-        polling[guildid] = {"voters":[],"options":{},"time":0,"vis":True}
-    if (datetime.datetime.now(datetime.timezone.utc) - ctx.author.created_at).days < 30:
-        await ctx.send("<:warning:1229332347086704661> This account is too young to use the poll feature.",ephemeral=True)
-        return
-    # vote
-    if mode == "+":        
-        if len(polling[guildid]["options"].keys()) == 0:
-            await ctx.send("<:warning:1229332347086704661> No poll active.",ephemeral=True)
-            return
-        if time.mktime(ctx.author.joined_at.timetuple()) > polling[guildid]["time"]:
-            await ctx.send("<:warning:1229332347086704661> This account is ineligible to vote.",ephemeral=True)
-            return
-        if user in polling[guildid]["voters"]:
-            await ctx.send("<:warning:1229332347086704661> You have already voted.")
-            return
-        try:
-            content = [x.lower().capitalize() for x in polling[guildid]['options'].keys()]
-            components = interactions.StringSelectMenu(
-                content,
-                placeholder="Select:",
-                min_values=1,
-                max_values=1,
-                custom_id="pollcallback"
-            )
-            await ctx.send("Options to vote for:", components=components,ephemeral=True)
-        except Exception as e:
-            await ctx.send(f"An error occured.\n{e} : {str(e)}")
-    # info
-    if mode in ["*"]:
-        if len(polling[guildid]["options"].keys()) == 0:
-            await ctx.send("<:warning:1229332347086704661> No poll active.")
-            return
-        if polling[guildid]["vis"] == False:
-            await ctx.send("<:warning:1229332347086704661> Poll information hidden.")
-            return
-        output = "**CURRENT POLL**\n\n"
-        for i in polling[guildid]["options"]:
-            output += f"[{i.upper()}] - {polling[guildid]['options'][i]} votes\n"
-        output += f"\n*Total participation: {len(polling[guildid]['voters'])}*"
-        await ctx.send(output,ephemeral=True if mode == "*" else False)
-    # visibility
-    if mode == "*+":
-        if str(ctx.author) in listadmins:
-            polling[guildid]["vis"] = not polling[guildid]["vis"]
-            await ctx.send(f"<:info:1229350084299194388> Poll visibility switched to {polling[guildid]['vis']}",ephemeral=True)
-            with open("polling.json","w") as f:
-                json.dump(polling, f)
-        else:
-            await ctx.send("<:warning:1229332347086704661> No permission to use this",ephemeral=True)
-    # delete
-    if mode == "-":
-        if str(ctx.author) in listadmins:
-            polling[guildid] = {"voters":[],"options":{},"time":0,"vis":True}
-            with open("voting_log.txt","a") as f:
-                f.write(f"A Poll was deleted on GID {guildid}\n")
-            await ctx.send("Poll was successfully destroyed.")
-        else:
-            await ctx.send("<:warning:1229332347086704661> No permission to use this",ephemeral=True)
-        with open("polling.json","w") as f:
-            json.dump(polling, f)
-    # set
-    if mode == "**":
-        await ctx.send("<:warning:1229332347086704661> Unavailable",ephemeral=True)
-        return
-        if str(ctx.author) in listadmins:
-            if polling[guildid] != {"voters":[],"options":{},"time":0,"vis":True}:
-                await ctx.send("<:warning:1229332347086704661> Poll already active. Destroy it first.")
-                return
-            my_modal = interactions.Modal(
-            interactions.ShortText(label="Poll overwrite", custom_id="newpoll", placeholder="Input your poll options. Use this template: ['A','B','C',...]", required=True, min_length=4),
-            interactions.ShortText(label="Guild ID", custom_id="guildid", placeholder="Destination Guild-ID", required=True),
-            title="POLL // Create:",
-            custom_id="poll_create",
-            )
-            await ctx.send_modal(modal=my_modal)
-        else:
-            await ctx.send("<:warning:1229332347086704661> No permission to use this",ephemeral=True)
-
 @interactions.slash_command(name="gallery", description="View art of Shenzhia.")
 async def gallery(ctx: interactions.SlashContext):
     await ctx.defer(ephemeral=True)
@@ -2370,61 +2208,5 @@ async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
         await ctx.send(f"Rolled: {random.choice(userinput.split(sep=','))}")
     except:
         await ctx.send(f"<:qito_error:1137124869713166416> Something went wrong.")
-    
-@interactions.modal_callback("poll_create")
-async def modal_poll_create(ctx: interactions.ModalContext, newpoll: str, guildid: str):
-    await ctx.defer()
-    try:
-        userinput = eval(newpoll.strip())  
-    except:
-        await ctx.send("<:warning:1229332347086704661> Invalid content.")
-        return
-    if len(userinput) < 2:
-        await ctx.send("<:warning:1229332347086704661> Less than 2 options provided.")
-        return
-    comparision_list = []
-    for i in userinput:
-        if not isinstance(i, str):
-            await ctx.send("<:warning:1229332347086704661> List contains non-string elements. Clear/Format them and try again.")
-            return
-        if i.upper() in comparision_list:
-            await ctx.send("<:warning:1229332347086704661> Duplicate entires detected. (Reminder: Entries are case-**insensitive**)")
-            return
-        comparision_list.append(i.upper())
-    with open("polling.json","r") as f:
-        polling = json.load(f)
-    polling[guildid.strip()]["options"] = {}
-    polling[guildid.strip()]["time"] = time.time()
-    for i in userinput:
-        polling[guildid.strip()]["options"][i.upper()] = 0
-    await ctx.send("Poll created!")
-    with open("voting_log.txt","a") as f:
-        f.write(f"A Poll was created on GID {guildid}\n")
-    with open("polling.json","w") as f:
-        json.dump(polling, f)
-
-@interactions.component_callback("pollcallback")
-async def pollcallback(ctx: interactions.ComponentContext):
-    global polling
-    await ctx.defer()
-    user = str(ctx.author.id)
-    guildid = str(ctx.guild.id)
-    with open("polling.json","r") as f:
-        polling = json.load(f)
-    if str(user) in polling[guildid]["voters"]:
-        await ctx.send(f"<:warning:1229332347086704661> Voted already.")
-        return
-    choice = ctx.values[0]
-    polling[guildid]["voters"].append(user)
-    polling[guildid]["options"][choice.upper()] += 1
-    if polling[guildid]["vis"]:
-        await ctx.send(f"Voting completed!\n*Voted for: `{choice}`*")
-    else:
-        await ctx.send(f"Vote has been cast.")
-    with open("voting_log.txt","a") as f:
-        f.write(f"{str(ctx.author)} voted {choice} on GID {guildid}\n")
-    with open("polling.json","w") as f:
-        json.dump(polling, f)
-
 
 bot.start(discord_bot_token[login])
