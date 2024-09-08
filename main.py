@@ -2195,6 +2195,7 @@ async def help(ctx: interactions.SlashContext):
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
     embed.add_field(name="View documentation",value="- [Main page](<https://github.com/SweetPinkMilkTea/shenzhia>)\n- [Commands](<https://github.com/SweetPinkMilkTea/shenzhia?tab=readme-ov-file#regular-commands>)\n- [Terms explained](<https://github.com/SweetPinkMilkTea/shenzhia?tab=readme-ov-file#glossary>)")
+    embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/shenzhia/issues>)")
     await ctx.send(embed=embed)
 
 # -------------------
