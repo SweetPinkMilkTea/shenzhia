@@ -901,10 +901,9 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
 
-@interactions.slash_command(name="performance", description="Get a player's performance report, containing Trophy/Ranked info and TSR - a custom skill metric.")
+@interactions.slash_command(name="performance", description="Get a player's performance report, containing Trophy/Ranked info and TSR - a custom skill metric.", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="extend", description="Show 18 instead of 12 brawlers", required=False, opt_type=interactions.OptionType.BOOLEAN)
-@interactions.integration_types(guild=True, user=True)
 async def performance(ctx: interactions.SlashContext, tag: str = "", extend: bool = False):
     await ctx.defer()
     if "fuckyou" in tag.lower().replace(" ",""):
