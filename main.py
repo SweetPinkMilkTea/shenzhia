@@ -1553,14 +1553,14 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             if "teams" not in data["battle"].keys():
                 await ctx.send("<:warning:1229332347086704661> Unsupported Mode")
                 return
-            if len(data["battle"]["teams"]) < 2:
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# PvP only!")
+            if len(data["battle"]["teams"]) != 2:
+                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Allowed: 3v3, 5v5, Solo SD")
                 return
             if len(data["battle"]["teams"][0]) != len(data["battle"]["teams"][1]):
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly batteles are excluded.")
+                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly battles are excluded.")
                 return
             if len(data["battle"]["teams"][0]) not in [3,5]:
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly batteles are excluded.")
+                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly battles are excluded.")
                 return
             else:
                 mode5v5 = len(data["battle"]["teams"][1]) == 5
