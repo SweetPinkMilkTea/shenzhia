@@ -2178,7 +2178,7 @@ async def gallery(ctx: interactions.SlashContext):
     await ctx.defer(ephemeral=True)
     embeds = []
     for i in range(4,-1,-1):
-        embed = interactions.Embed(title=["ARTSGUI","SEBIXO","SEBIXO","VIPKIDDO","INJI","INJI"][i],
+        embed = interactions.Embed(title=["Artsgui: '0x00000'","Sebixo: 'Dualboot'","Sebixo: 'Unexpected Exception'","VIPKiddo: 'http://'","Inji: 'Trirumvirate'","Inji: 'FTP-Share'"][i],
                       url=["https://x.com/GuilhermeArtz","https://x.com/Sebixo3priv","https://x.com/Sebixo3priv","https://x.com/VIPKiddo29","https://x.com/Inji_arts","https://x.com/Inji_arts"][i],
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
