@@ -40,9 +40,60 @@ Shenzhia needs additional resources outside of python related to you. These cons
 > You can use the bot without Sentry's service, this however requires editing Shenzhia's code.
 
 ### Custom Emojis
-Many custom Emojis are used with Shenzhia. On the first run setup, you set emojis so they can be displayed.
+Custom Emojis are an integral part of Shenzhia by visualizing a lot of data in a more digestible format than simply dumping text everywhere.
+However, for them to function, they have to be set first.
 
-To be able to set emojis, [follow the instructions here.](https://github.com/SweetPinkMilkTea/shenzhia/wiki/Setting-Emojis)
+A bot can use an emoji reference (e.g. `<:bingus:1228965645262258207>`) to display custom emojis. The only condition to this is that either:
+- The Emoji is in a server the bot is also in
+- The Emoji has been added to the bot itself in the Discord Developer Portal
+
+If neither of these conditions are met, the reference will be displayed in plain text.
+
+To get Emoji references:
+- Send a message with a Backslash in front of the emoji.
+or
+- Press the "Copy Markdown" button of the Emoji in the Emoji Section of your Application
+> [!NOTE]
+> If you are using multiple applications interchangeably, the second option will lead to only one app being able to use assigned Emojis.
+
+On first run setup, every Emoji utilized is asked to be assigned by pasting in the references obtained during Emoji creation.
+
+The list of Emojis (and Examples used) is as follows:
+| Prompt | Description | Example |
+| --- | --- | --- |
+| Power1 - Power11 | Brawler Power Indicators | ![](https://cdn.discordapp.com/emojis/1228965756092285011.webp?size=44&quality=lossless) |
+| Gadget_OK | Brawler has a Gadget | ![](https://cdn.discordapp.com/emojis/1228965764631892069.webp?size=44&quality=lossless) |
+| SP_OK | Brawler has a Star Power | ![](https://cdn.discordapp.com/emojis/1228965791639277659.webp?size=44&quality=lossless) |
+| Gear_OK | Brawler has a Gear | ![](https://cdn.discordapp.com/emojis/1228965774199230474.webp?size=44&quality=lossless) |
+| Slot_Empty | Brawler does not have this item | ![](https://cdn.discordapp.com/emojis/1228965782390702201.webp?size=44&quality=lossless) |
+| Bronze, Silver, Gold | Star Icons for Rankings and Star Player | ![](https://cdn.discordapp.com/emojis/1153418516205162577.webp?size=44&quality=lossless) |
+| Trophy, Bling, PPoint, GadgetIcon, SPIcon, GearIcon, HChargeIcon | Represenation for the ingame symbols | ![](https://cdn.discordapp.com/emojis/1137140150065954816.webp?size=44&quality=lossless) |
+| Error, Warning, Info | Symbols for emphasizing process outcomes | ![](https://cdn.discordapp.com/emojis/1137124869713166416.webp?size=44&quality=lossless) ![](https://cdn.discordapp.com/emojis/1229332347086704661.webp?size=44&quality=lossless) ![](https://cdn.discordapp.com/emojis/1229350084299194388.webp?size=44&quality=lossless) |
+| Connected | Indicates bot startup | ![](https://cdn.discordapp.com/emojis/1140550294313373766.webp?size=44&quality=lossless) |
+| Rank<tier> | Rankings for certain functionality | See below |
+
+Here are all rank icons. You can use them by copying thier URLs.
+
+| Rank | Icon |
+| --- | --- |
+| None | ![](https://cdn.discordapp.com/emojis/1134890614635372675.webp?size=44&quality=lossless) |
+| E | ![](https://cdn.discordapp.com/emojis/1262541950561812601.webp?size=44&quality=lossless) |
+| D | ![](https://cdn.discordapp.com/emojis/1262542011576356915.webp?size=44&quality=lossless) |
+| D+ | ![](https://cdn.discordapp.com/emojis/1262542055326879858.webp?size=44&quality=lossless) |
+| C- | ![](https://cdn.discordapp.com/emojis/1262542122469294121.webp?size=44&quality=lossless) |
+| C | ![](https://cdn.discordapp.com/emojis/1262542167440756847.webp?size=44&quality=lossless) |
+| C+ | ![](https://cdn.discordapp.com/emojis/1262542219714494484.webp?size=44&quality=lossless) |
+| B- | ![](https://cdn.discordapp.com/emojis/1262542285644501095.webp?size=44&quality=lossless) |
+| B | ![](https://cdn.discordapp.com/emojis/1262543019417014333.webp?size=44&quality=lossless) |
+| B+ | ![](https://cdn.discordapp.com/emojis/1262543136291426394.webp?size=44&quality=lossless) |
+| A- | ![](https://cdn.discordapp.com/emojis/1262543188908839022.webp?size=44&quality=lossless) |
+| A | ![](https://cdn.discordapp.com/emojis/1262543236518383616.webp?size=44&quality=lossless) |
+| A+ | ![](https://cdn.discordapp.com/emojis/1262543274506457089.webp?size=44&quality=lossless) |
+| S- | ![](https://cdn.discordapp.com/emojis/1263948719577894922.webp?size=44&quality=lossless) |
+| S | ![](https://cdn.discordapp.com/emojis/1263948731167015013.webp?size=44&quality=lossless) |
+| S+ | ![](https://cdn.discordapp.com/emojis/1263948744286802021.webp?size=44&quality=lossless) |
+| SS | ![](https://cdn.discordapp.com/emojis/1263953646245384274.webp?size=44&quality=lossless) | 
+| EX | ![](https://cdn.discordapp.com/emojis/1133686283093426256.webp?size=44&quality=lossless) |
 
 ## Installing
 - Clone the repo into the directory of your choice
