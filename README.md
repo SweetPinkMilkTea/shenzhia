@@ -6,12 +6,12 @@
 > 
 > This bot has not been tested against large numbers of users/servers. Be aware that performance problems might arise under such circumstances.
 >
-> *I am by no means a experienced developer. I'm always open for suggestions and feedback, provided it's constructive and remains civil.*
+> *I am by no means an experienced developer. I'm always open for suggestions and feedback, provided it's constructive and remains civil.*
 
 # About
 This is Shenzhia, a python discord bot.
 
-It's use is communicating with the Brawl Stars API and displaying data to the requester in an engaging format.
+Its use is communicating with the Brawl Stars API and displaying data to the requester in an engaging format.
 
 Additionally, it can save and work with received data to further utilize API data.
 
@@ -43,17 +43,17 @@ Shenzhia needs additional resources outside of python related to you. These cons
 Custom Emojis are an integral part of Shenzhia by visualizing a lot of data in a more digestible format than simply dumping text everywhere.
 However, for them to function, they have to be set first.
 
-A bot can use an emoji reference (e.g. `<:bingus:1228965645262258207>`) to display custom emojis. The only condition to this is that either:
-- The Emoji is in a server the bot is also in
-- The Emoji has been added to the bot itself in the Discord Developer Portal
-
-If neither of these conditions are met, the reference will be displayed in plain text.
-
+A bot can use an emoji reference (e.g. `<:bingus:1228965645262258207>`) to display custom emojis.
 To get Emoji references:
-- Send a message with a Backslash in front of the emoji.
+
+- Send a message with a Backslash in front of the emoji in a Server the App and Emoji is in.
+
 or
+
 - Press the "Copy Markdown" button of the Emoji in the Emoji Section of your Application
+
 > [!NOTE]
+> For a bot to use a custom emoji, the emoji has to be in the same server where the app is in, or has to get added to the application itself.
 > If you are using multiple applications interchangeably, the second option will lead to only one app being able to use assigned Emojis.
 
 On first run setup, every Emoji utilized is asked to be assigned by pasting in the references obtained during Emoji creation.
@@ -67,12 +67,12 @@ The list of Emojis (and Examples used) is as follows:
 | Gear_OK | Brawler has a Gear | ![](https://cdn.discordapp.com/emojis/1228965774199230474.webp?size=44&quality=lossless) |
 | Slot_Empty | Brawler does not have this item | ![](https://cdn.discordapp.com/emojis/1228965782390702201.webp?size=44&quality=lossless) |
 | Bronze, Silver, Gold | Star Icons for Rankings and Star Player | ![](https://cdn.discordapp.com/emojis/1153418516205162577.webp?size=44&quality=lossless) |
-| Trophy, Bling, PPoint, GadgetIcon, SPIcon, GearIcon, HChargeIcon | Represenation for the ingame symbols | ![](https://cdn.discordapp.com/emojis/1137140150065954816.webp?size=44&quality=lossless) |
+| Trophy, Bling, PPoint, GadgetIcon, SPIcon, GearIcon, HChargeIcon | Represenation for the in game symbols | ![](https://cdn.discordapp.com/emojis/1137140150065954816.webp?size=44&quality=lossless) |
 | Error, Warning, Info | Symbols for emphasizing process outcomes | ![](https://cdn.discordapp.com/emojis/1137124869713166416.webp?size=44&quality=lossless) ![](https://cdn.discordapp.com/emojis/1229332347086704661.webp?size=44&quality=lossless) ![](https://cdn.discordapp.com/emojis/1229350084299194388.webp?size=44&quality=lossless) |
 | Connected | Indicates bot startup | ![](https://cdn.discordapp.com/emojis/1140550294313373766.webp?size=44&quality=lossless) |
 | Rank<tier> | Rankings for certain functionality | See below |
 
-Here are all rank icons. You can use them by copying thier URLs.
+Here are all rank icons. You can use them by copying their URLs.
 
 | Rank | Icon |
 | --- | --- |
@@ -114,7 +114,7 @@ Here are all rank icons. You can use them by copying thier URLs.
 
 > [!WARNING]
 > On the bot's first run, important files will be generated.
-> Avoid modifying code until the bot has successfully run once to avoid any unexpected behaviour.
+> Avoid modifying code until the bot has successfully run once to avoid any unexpected behavior.
 
 Upon running `main.py` for the first time, you will be asked of all the information listed in the prerequisites section.
 
