@@ -2222,12 +2222,12 @@ async def gallery(ctx: interactions.SlashContext):
     
 @interactions.slash_command(name="help", description="View the documentation.")
 async def help(ctx: interactions.SlashContext):
-    embed = interactions.Embed(title="Get started (BETA)",
+    embed = interactions.Embed(title="Get started (beta)",
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
-    embed.add_field(name="View repository",value="- [Main page](<https://github.com/SweetPinkMilkTea/shenzhia>)")
-    embed.add_field(name="View wiki",value="- [Commands](<https://github.com/SweetPinkMilkTea/shenzhia/wiki/Commands-and-Usage>)\n- [Terms](<>)")
-    embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/shenzhia/issues>)")
+    embed.add_field(name="View repository",value="- [Main page](<https://github.com/SweetPinkMilkTea/shenzhia>)", inline=True)
+    embed.add_field(name="View wiki",value="- [Commands](<https://github.com/SweetPinkMilkTea/shenzhia/wiki/Commands-and-Usage>)\n- [Terms](<https://github.com/SweetPinkMilkTea/shenzhia/wiki/Terms>)", inline=True)
+    embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/shenzhia/issues>)", inline=True)
     await ctx.send(embed=embed)
 
 # -------------------

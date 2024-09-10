@@ -1,5 +1,5 @@
-> [!IMPORTANT]
-> Hello world! This readme is not complete yet.
+> [!TIP]
+> Searching for bot usage documentation? Find information on using the bot on the wiki section of the repo.
 
 > [!CAUTION]
 > This bot is unfinished and in active development. Anything might be broken and be changed without notice.
@@ -75,6 +75,3 @@ You will also be asked for a logging channel and an "Admin-Server". Paste their 
 Finally, set all needed Emojis.
 
 After entering everything, your first-run-setup is done!
-
-> [!TIP]
-> Searching for bot usage documentation? Find information on using the bot on the wiki section of the repo.
