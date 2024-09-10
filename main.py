@@ -39,7 +39,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = ["dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
+req_files = ["symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -79,6 +79,19 @@ if not all(x in os.listdir() for x in req_files):
         c = "scopedguild"
         d = input("Channel-ID: ")
         json.dump({a:b,c:d},f)
+    with open("symbols.json","w") as f:
+        print("Set emojis\nNeed help? Visit the wiki for instructions and for emoji name meanings.\n---")
+        emojidict = {}
+        for i in ["Power1","Power2","Power3","Power4","Power5","Power6","Power7","Power8","Power9","Power10","Power11","Gadget_OK","SP_OK","Gear_OK","Slot_Empty","Bronze","Silver","Gold","Trophy","Bling","PPoint","GadgetIcon","SPIcon","GearIcon","HChargeIcon","ExtraSparkles","Error","Warning","Info","Connected","RankNone","RankE","RankD","RankD+","RankC-","RankC","RankC+","RankB-","RankB","RankB+","RankA-","RankA","RankA+","RankS-","RankS","RankS+","RankSS","RankEX"]:
+            while True:
+                x = input(f"| {i} > ")
+                if bool(re.match(r'^<:.*:\d+>$', x)):
+                    break
+                else:
+                    print("Not a emoji reference. Try again.")
+            emojidict[i] = x
+        json.dump(emojidict,f)
+
 
 # Fast Login
 # Provide a non-empty string to auto-pick a saved bot token
@@ -101,6 +114,8 @@ with open("verbose_silence.json") as f:
         silence = json.load(f)["dur"]
     except:
         silence = 0
+with open("symbols.json") as f:
+    emojidict = json.load(f)
 with open("dev_env.json") as f:
     dev_env = json.load(f)
     logger = int(dev_env["loggingchannel"])
@@ -191,17 +206,19 @@ while True:
 maxHypercharges = 43
 maxCurrency += maxHypercharges * 5000
 maxCurrencyAdv += maxHypercharges * 5000
-powericonlist = ["<:1:1228965645262258207>","<:2:1228965679122743379>","<:3:1228965688677236737>","<:4:1228965697045135442>","<:5:1228965704988889149>","<:6:1228965713058730125>","<:7:1228965722068226098>","<:8:1228965730750435368>","<:9_:1228965740116180992>","<:10:1228965748064387182>","<:11:1228965756092285011>"]
+powericonlist = []
+for i in range(1,12):
+    powericonlist.append(emojidict[f"Power{i}"])
 
 def send_api_error(reason):
     if "accessDenied" in reason:
-        return f"<:qito_error:1137124869713166416> The current API key for the BS-API is outdated. Please wait for a fix."
+        return f"{emojidict['Error']} The current API key for the BS-API is outdated. Please wait for a fix."
     elif reason == "inMaintenance":
-        return"<:qito_error:1137124869713166416> BS API under Maintenance. Please wait until it's over, this often only takes a few minutes."
+        return f"{emojidict['Error']} BS API under Maintenance. Please wait until it's over, this often only takes a few minutes."
     elif reason == "notFound":
-        return "<:warning:1229332347086704661> This profile doesn't exist."
+        return f"{emojidict['Warning']} This profile doesn't exist."
     else:
-        return f"<:qito_error:1137124869713166416> BS API couldn't respond. Check '/status'?"
+        return f"{emojidict['Error']} BS API couldn't respond. Check '/status'?"
 
 
 startuptime = int(time.time())
@@ -243,7 +260,7 @@ async def on_startup():
         print("Task error!")
     channel = bot.get_channel(logger)
     if silence <= time.time():
-        await channel.send(f"<:qito_connected:1140550294313373766> Bot has started/resumed.")
+        await channel.send(f"{emojidict['Connected']} Bot has started/resumed.")
     exitcode = 0
     with open("quick_restart.txt","w") as f:
         f.write(str(exitcode))
@@ -291,7 +308,7 @@ async def autosync():
                                 print(data["reason"])
                                 #Send error to dev channel and stop task
                                 channel = bot.get_channel(logger)
-                                await channel.send(f"<:qito_error:1137124869713166416> Auto-Request failed! Task was abandoned.\n\nReason: {data['reason']}")
+                                await channel.send(f"{emojidict['Error']} Auto-Request failed! Task was abandoned.\n\nReason: {data['reason']}")
                                 return
                             except:
                                 pass
@@ -347,7 +364,7 @@ async def bs_player_leaderboard():
         print(data["reason"])
         #Send error to dev channel and stop task
         channel = bot.get_channel(logger)
-        await channel.send(f"<:qito_error:1137124869713166416> Leaderboard data request failed! Task was abandoned.\n\nReason: {data['message']}")
+        await channel.send(f"{emojidict['Error']} Leaderboard data request failed! Task was abandoned.\n\nReason: {data['message']}")
         return
     except:
         pass
@@ -535,7 +552,7 @@ async def export(ctx: interactions.SlashContext, listdir: bool = False, query: s
             return
         except:
             await ctx.defer(ephemeral=True)
-            await ctx.send("<:warning:1229332347086704661> Subdirectory does not exist. Typo?")
+            await ctx.send(f"{emojidict['Warning']} Subdirectory does not exist. Typo?")
             return
     else:
         try:
@@ -544,7 +561,7 @@ async def export(ctx: interactions.SlashContext, listdir: bool = False, query: s
             return
         except:
             await ctx.defer(ephemeral=True)
-            await ctx.send("<:warning:1229332347086704661> Resource does not exist. Typo?")
+            await ctx.send(f"{emojidict['Warning']} Resource does not exist. Typo?")
             return
 
 @interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[scope])
@@ -560,10 +577,10 @@ async def silenceverbose(ctx: interactions.SlashContext, duration: int):
         silence = json.load(f)
     if duration == 0:
         silence["dur"] = 0
-        await ctx.send(f"<:info:1229350084299194388> Logging silence at 0")
+        await ctx.send(f"{emojidict['Info']} Logging silence at 0")
     else:
         silence["dur"] = int(time.time()) + duration*60
-        await ctx.send(f"<:info:1229350084299194388> Logging disabled until <t:{silence['dur']}:f> | <t:{silence['dur']}:R>")
+        await ctx.send(f"{emojidict['Info']} Logging disabled until <t:{silence['dur']}:f> | <t:{silence['dur']}:R>")
     with open("verbose_silence.json","w") as f:
         json.dump(silence,f)
     silence = silence["dur"]
@@ -621,7 +638,7 @@ async def whois(ctx: interactions.SlashContext, id: str):
     with open("bs_tags.json") as f:
         tags = json.load(f)
     if id not in tags.keys():
-        await ctx.send("<:warning:1229332347086704661> Nothing found under this ID.")
+        await ctx.send(f"{emojidict['Warning']} Nothing found under this ID.")
     else:
         embed = interactions.Embed(title=f"LINKED PROFILES",
                         color=0x6f07b4,
@@ -658,8 +675,8 @@ async def leaderboard(ctx: interactions.SlashContext):
     placement = 1
     for i in bs_guild_leaderboard_data[:9]:
         userelement = await bot.fetch_user(tag_dict[i])
-        rank = "<:tranknone:1134890614635372675>"
-        rlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
+        rank = emojidict['RankNone']
+        rlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
         index2 = 0
         #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
         #         -  600         675                750                 800                  900           1000   1150    1250
@@ -670,8 +687,8 @@ async def leaderboard(ctx: interactions.SlashContext):
                 rank = rlist[index2]
                 index2 += 1
         l_value = bsdict[i]['history'][-1]['value']
-        l_indicator = ['<:goldstar:1153418516205162577> ','<:silverstar:1153418444486758513> ','<:bronzestar:1153418350970536007> ',''][index]
-        embed.add_field(name=f"{l_indicator}#{placement} {userelement.username}",value=f"{rank} | {tsrbest[i]:,} tsr\n<:qito_trophy:1137140150065954816> {l_value}",inline=True)
+        l_indicator = [emojidict['Gold'],emojidict['Silver'],emojidict['Bronze'],''][index] + " "
+        embed.add_field(name=f"{l_indicator}#{placement} {userelement.username}",value=f"{rank} | {tsrbest[i]:,} tsr\n{emojidict['Trophy']} {l_value}",inline=True)
         if index != 3:
             index += 1
         placement += 1
@@ -704,15 +721,15 @@ async def enable_autosync(ctx: interactions.SlashContext):
     with open("bs_data.json","r") as f:
         bsdict = json.load(f)
     if not str(ctx.author.id) in tags.keys():
-        await ctx.send(f"<:warning:1229332347086704661> You are not linked to a BS-Account to sync.")
+        await ctx.send(f"{emojidict['Warning']} You are not linked to a BS-Account to sync.")
         return
     for i in tags[str(ctx.author.id)]:
         if not i in bsdict.keys():
-            await ctx.send(f"<:warning:1229332347086704661> You have yet to use '/performance' {'at at least one of your linked accounts ' if len(tags[str(ctx.author.id)]) > 1 else ''}to initiate a save.")
+            await ctx.send(f"{emojidict['Warning']} You have yet to use '/performance' {'at at least one of your linked accounts ' if len(tags[str(ctx.author.id)]) > 1 else ''}to initiate a save.")
             return
     for i in tags[str(ctx.author.id)]:
         bsdict[i]["updates"] = True
-    await ctx.send(f"<:info:1229350084299194388> AutoSync is turned on.")
+    await ctx.send(f"{emojidict['Info']} AutoSync is turned on.")
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
 
@@ -737,16 +754,16 @@ async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
         json.dump(name_dict,f) 
     if str(ctx.author.id) in tags:
         if len(tags[str(ctx.author.id)]) >= 5:
-            await ctx.send(f"<:warning:1229332347086704661> Max # of links created.",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} Max # of links created.",ephemeral=True)
             return
         if tag.upper() in tags[str(ctx.author.id)]:
-            await ctx.send(f"<:warning:1229332347086704661> You already linked this tag to yourself.",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} You already linked this tag to yourself.",ephemeral=True)
             return
         saved_tags = []
         for i in tags:
             saved_tags += tags[i] if i != str(ctx.author.id) else []
         if tag.upper() in saved_tags:
-            await ctx.send(f"<:warning:1229332347086704661> This tag has been blocked for linking as it has been linked to somebody else.",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} This tag has been blocked for linking as it has been linked to somebody else.",ephemeral=True)
             return
     url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag)}/"
     headers = {
@@ -756,16 +773,16 @@ async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             if response.status == 429:
-                await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.",ephemeral=True)
                 return
             if response.status != 200:
-                await ctx.send(f"<:warning:1229332347086704661> '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
+                await ctx.send(f"{emojidict['Warning']} '#' missing, Tag incorrect and/or API unavailable.\n-# Use '/status' to check for connectivity.")
                 return
     try:
         tags[str(ctx.author.id)].append(tag.upper())
     except:
         tags[str(ctx.author.id)] = [tag.upper()]
-    await ctx.send("<:info:1229350084299194388> Your profile was linked.")
+    await ctx.send(f"{emojidict['Info']} Your profile was linked.")
     with open("bs_tags.json","w") as f:
         json.dump(tags,f)
     
@@ -780,13 +797,13 @@ async def profilelinkremove(ctx: interactions.SlashContext, tag: str = ""):
     with open("tsr_best.json","r") as f:
         tsrbest = json.load(f)
     if str(ctx.author.id) not in tags:
-        await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.")
+        await ctx.send(f"{emojidict['Warning']} No profiles linked yet.")
         return
     if tag.upper() not in tags[str(ctx.author.id)]:
-        await ctx.send(f"<:warning:1229332347086704661> This tag is not linked to your account.")
+        await ctx.send(f"{emojidict['Warning']} This tag is not linked to your account.")
         return
     tags[str(ctx.author.id)].remove(tag.upper())
-    await ctx.send(f"<:info:1229350084299194388> Removed successfully.")
+    await ctx.send(f"{emojidict['Info']} Removed successfully.")
     with open("bs_tags.json","w") as f:
         json.dump(tags,f)
     
@@ -800,7 +817,7 @@ async def profilelinkview(ctx: interactions.SlashContext):
     with open("tsr_best.json","r") as f:
         tsrbest = json.load(f)
     if str(ctx.author.id) not in tags:
-        await ctx.send(f"<:warning:1229332347086704661> No profiles linked yet.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} No profiles linked yet.",ephemeral=True)
         return
     embed = interactions.Embed(title=f"LINKED PROFILES",
                     color=0x6f07b4,
@@ -836,7 +853,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set one.")
+        await ctx.send(f"{emojidict['Warning']} No tag is saved to your account.\n-# Use '/profilelink' to set one.")
         return
     for i in tag:
         try:
@@ -860,7 +877,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         except:
             try:
                 if data["message"] == "API at maximum capacity, request throttled.":
-                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.")
+                    await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.")
             except:
                 pass
         cutoffs = {501:4,525:6,550:8,575:10,600:12,625:14,650:16,675:18,700:20,725:22,750:24,775:26,800:28,825:30,850:32,875:34,900:36,925:38,950:40,975:42,1000:44,1050:46,1100:48,1150:50,1200:52,1250:54,1300:56,1350:58,1400:60,1450:62,1500:64}
@@ -891,8 +908,8 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
 
-        embed.add_field(name="<:qito_trophy:1137140150065954816>",value=f"{totaltrophies:,} \u27A1 {totaltrophies-deduction:,} (-{deduction})",inline=False)
-        embed.add_field(name="<:qito_bling:1137121684449677322>",value="+"+str(bling),inline=False)
+        embed.add_field(name=f"{emojidict['Trophy']}",value=f"{totaltrophies:,} \u27A1 {totaltrophies-deduction:,} (-{deduction})",inline=False)
+        embed.add_field(name={emojidict['Bling']},value="+"+str(bling),inline=False)
         embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
@@ -915,7 +932,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         tsrbest = json.load(f)
     if tag != "":
         if tag[0] != "#":
-            await ctx.send(f"<:warning:1229332347086704661> '#' missing from tag",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} '#' missing from tag",ephemeral=True)
             return
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
@@ -925,7 +942,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     embeds = []
     for tag_element in tag:
@@ -957,7 +974,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             try:
                 if data["message"] == "API at maximum capacity, request throttled.":
-                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                    await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.",ephemeral=True)
                 if bsdict[tag_element]["history"] == []:
                     del bsdict[tag_element]            
                 return
@@ -1043,7 +1060,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         embed = interactions.Embed(title=f"{data['name']} ({tag_element})",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
-        embed.add_field(name=f"<:qito_trophy:1137140150065954816> {data['trophies']:,}",value=f"Best: {data['highestTrophies']:,}",inline=True)
+        embed.add_field(name=f"{emojidict['Trophy']} {data['trophies']:,}",value=f"Best: {data['highestTrophies']:,}",inline=True)
         
         if len(brawlerlist) >= 10:
             performancelist = []
@@ -1129,8 +1146,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             nolog = True
         if not showdownwarning:
-            rank = "<:tranknone:1134890614635372675>"
-            rlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
+            rank = emojidict['RankNone']
+            rlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
             index2 = 0
             #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
             #         -  600         675                750                 800                  900           1000   1150    1250
@@ -1210,25 +1227,25 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 print(traceback.format_exc())
             embed.add_field(name=f"{rank} | {ppscore:,} TSR (Best: {besttsr:,})",value=f"AR: {arscore}",inline=True)
         if showdownwarning:
-            embed.add_field(name=f"<:warning:1229332347086704661> High SD/3v3 Win-Ratio",value=f"No Advanced Stats calculated.",inline=True)
+            embed.add_field(name=f"{emojidict['Warning']} High SD/3v3 Win-Ratio",value=f"No Advanced Stats calculated.",inline=True)
         if tag[0] in ["#8VGY00G9"]:
             if tag[0] == "#8VGY00G9":
-                embed.add_field(name=f"<:goldstar:1153418516205162577> SHENZHIA DEVELOPER",value=f" ",inline=False)
+                embed.add_field(name=f"{emojidict['Gold']} SHENZHIA DEVELOPER",value=f" ",inline=False)
         elif tag[0] in bs_leaderboard_data:
             if bs_leaderboard_data.index(tag[0])+1 < 11:
-                icon = "<:goldstar:1153418516205162577> "
+                icon = f"{emojidict['Gold']} "
             elif bs_leaderboard_data.index(tag[0])+1 < 51:
-                icon = "<:silverstar:1153418444486758513> "
+                icon = f"{emojidict['Silver']} "
             else:
-                icon = "<:bronzestar:1153418350970536007> "
+                icon = f"{emojidict['Bronze']} "
             embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
         elif tag[0] in bs_guild_leaderboard_data[:9]:
             if bs_guild_leaderboard_data.index(tag[0])+1 == 1:
-                icon = "<:goldstar:1153418516205162577> "
+                icon = f"{emojidict['Gold']} "
             elif bs_guild_leaderboard_data.index(tag[0])+1 == 2:
-                icon = "<:silverstar:1153418444486758513> "
+                icon = f"{emojidict['Silver']} "
             elif bs_guild_leaderboard_data.index(tag[0])+1 == 3:
-                icon = "<:bronzestar:1153418350970536007> "
+                icon = f"{emojidict['Bronze']} "
             else:
                 icon = ""
             embed.add_field(name=f"{icon}#{bs_guild_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
@@ -1267,21 +1284,21 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                             break
                     if m_index not in [0,9]:
                         multiplier = m_index%3 if m_index%3 != 0 else 3
-                        mastery_display = f"{['<:bronzestar:1153418350970536007>','<:silverstar:1153418444486758513>','<:goldstar:1153418516205162577>'][(m_index-1)//3]}" * multiplier
+                        mastery_display = f"{[emojidict['Bronze'],emojidict['Silver'],emojidict['Gold']][(m_index-1)//3]}" * multiplier
                     elif m_index == 9:
-                        mastery_display = f"{'<:goldstar:1153418516205162577>'*3} + {masterypoints - 24800}"
+                        mastery_display = f"{emojidict['Gold']*3} + {masterypoints - 24800}"
                     else:
                         mastery_display = f""
-                    gadgetindicator = "<:gadget:1228965764631892069>" if len(brawlerlist[i]["gadgets"]) > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if len(brawlerlist[i]["starPowers"]) > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if len(brawlerlist[i]["gears"]) > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"<:qito_trophy:1137140150065954816> {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl if su_data != 0 else ''}{mastery_display}",inline=True)
+                    gadgetindicator = emojidict['Gadget_OK'] if len(brawlerlist[i]["gadgets"]) > 0 else emojidict['Slot_Empty']
+                    spindicator = emojidict['SP_OK'] if len(brawlerlist[i]["starPowers"]) > 0 else emojidict['Slot_Empty']
+                    gearindicator1 = emojidict['SP_OK'] if len(brawlerlist[i]["gears"]) > 0 else emojidict['Slot_Empty']
+                    gearindicator2 = emojidict['SP_OK'] if len(brawlerlist[i]["gears"]) > 1 else emojidict['Slot_Empty']
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"{emojidict['Trophy']} {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl if su_data != 0 else ''}{mastery_display}",inline=True)
                 except Exception as e:
-                    embed.add_field(name=f"[#-] ---",value=f"<:qito_trophy:1137140150065954816> {0} / {0}{nl}{tsr_display}",inline=True)
+                    embed.add_field(name=f"[#-] ---",value=f"{emojidict['Trophy']} {0} / {0}{nl}{tsr_display}",inline=True)
                     print(f"{e} : {str(e)}")
         if lock_brawler_overview:
-            embed.add_field(name=f"API DEFUNCT",value=f"<:warning:1229332347086704661> Invalid data recieved. Can't display brawler data. ;-;",inline=False)
+            embed.add_field(name=f"API DEFUNCT",value=f"{emojidict['Warning']} Invalid data recieved. Can't display brawler data. ;-;",inline=False)
         
         fluc_list = []
         try:
@@ -1292,7 +1309,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         except:
             pass
         if len(fluc_list) > 1:
-            sessionstr = f"{fluc_list[-1]['value'] - fluc_list[-2]['value']:,} <:qito_trophy:1137140150065954816>"
+            sessionstr = f"{fluc_list[-1]['value'] - fluc_list[-2]['value']:,} {emojidict['Trophy']}"
             try:
                 tsrstr = f"{fluc_list[-1]['tsr'] - fluc_list[-2]['tsr']:,} tsr"
             except:
@@ -1304,7 +1321,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     tsrstr = "+" + tsrstr
             embed.add_field(name=f"FLUCTUATION",value=f"<t:{fluc_list[-2]['time']}:R>\n{sessionstr} / {tsrstr}",inline=True)
         #Power League
-        rlist = ["<:tranknone:1134890614635372675>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_e:1262541950561812601>","<:rank_d:1262542011576356915>","<:rank_d_plus:1262542055326879858>","<:rank_c_minus:1262542122469294121>","<:rank_c:1262542167440756847>","<:rank_c_plus:1262542219714494484>","<:rank_b_minus:1262542285644501095>","<:rank_b:1262543019417014333>","<:rank_b_plus:1262543136291426394>","<:rank_a_minus:1262543188908839022>","<:rank_a:1262543236518383616>","<:rank_a_plus:1262543274506457089>","<:rank_s_minus:1263948719577894922> ","<:rank_s:1263948731167015013>","<:rank_s_plus:1263948744286802021>","<:rank_ss:1263953646245384274>","<:trankx:1133686283093426256>"]
+        rlist = [emojidict['RankNone'],emojidict['RankE'],emojidict['RankE'],emojidict['RankE'],emojidict['RankD'],emojidict['RankD+'],emojidict['RankC-'],emojidict['RankC'],emojidict['RankC+'],emojidict['RankB-'],emojidict['RankB'],emojidict['RankB+'],emojidict['RankA-'],emojidict['RankA'],emojidict['RankA+'],emojidict['RankS-'],emojidict['RankS'],emojidict['RankS+'],emojidict['RankSS'],emojidict['RankEX']]
         if load_from_archive:
             with open("bs_powerleague.json","r") as f:
                 pl_saves = json.load(f)
@@ -1313,12 +1330,12 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 pl_index_current = pl_saves[tag_element]["current"]
                 embed.add_field(name=f"RANKED DIVISION",value=f"Approximated Current:\n{rlist[pl_index_current]} | {['N/A','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][pl_index_current]}",inline=True)
             else:
-                embed.add_field(name=f"RANKED DIVISION",value=f"<:tranknone:1134890614635372675>\n*Unknown*",inline=True)
+                embed.add_field(name=f"RANKED DIVISION",value=f"{emojidict['RankNone']}\n*Unknown*",inline=True)
         else:
             embed.add_field(name=f"RANKED DIVISION",value=f"Current: {rlist[ranked_dict['rank_current']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_current']]} ({ranked_dict['score_current']})\nBest: {rlist[ranked_dict['rank_best']]} | {['N/A','B1','B2','B3','S1','S2','S3','G1','G2','G3','D1','D2','D3','M1','M2','M3','L1','L2','L3','MASTER'][ranked_dict['rank_best']]} ({ranked_dict['score_best']})",inline=True)
         #Win Rate
         if nolog:
-            embed.add_field(name=f"RECENT WIN-RATE",value=f"<:warning:1229332347086704661> Unavailable...",inline=True)
+            embed.add_field(name=f"RECENT WIN-RATE",value=f"{emojidict['Warning']} Unavailable...",inline=True)
         else: 
             if total != 0:
                 streak_display = ""
@@ -1337,9 +1354,9 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             asyc = "---"
         embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2) if not excludeSF else '---'}%",inline=False)
         if su_data == 0:
-            embed.add_field(name="<:warning:1229332347086704661>", value="Extension-API is down. Certain data is currently unavailable.")
+            embed.add_field(name=f"{emojidict['Warning']}", value="Extension-API is down. Certain data is currently unavailable.")
         if str(ctx.author_id) not in tags:
-            embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
+            embed.add_field(name=f"{emojidict['Info']}", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embeds.append(embed)
     if len(embeds) == 1 and not str(ctx.author_id) in tags:
         await ctx.send(embed=embed)
@@ -1353,7 +1370,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="advanced", description="Calculate with 2 Gadgets, 2 SPs and 6 Gears instead", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: bool = False):
-    #await ctx.send("<:warning:1229332347086704661> This function is unavailable due to a defunct in the Brawl Stars API.\n-# Maybe check back later. :(",ephemeral=True)
+    #await ctx.send(f"{emojidict['Warning']} This function is unavailable due to a defunct in the Brawl Stars API.\n-# Maybe check back later. :(",ephemeral=True)
     await ctx.defer()
     with open("bs_data.json") as f:
         bsdict = json.load(f)
@@ -1367,7 +1384,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         else:
             tag = [tag]
     except:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     embeds = []
     for tag_element in tag:
@@ -1392,7 +1409,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         except:
             try:
                 if data["message"] == "API at maximum capacity, request throttled.":
-                    await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+                    await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.",ephemeral=True)
                     return
             except:
                 pass
@@ -1451,15 +1468,16 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
         newline = "\n"
-        embed.add_field(name=f"BRAWLER GEAR COMPLETION",value=f"<:qito_gadget:1147201313810157629> `{gadgetcount}/{maxGadgets}`\n<:qito_starpower:1147201382420590663> `{starpowercount}/{maxStarpower}`\n<:qito_gear:1147201448191459328> `{gearcount}`\n<:qito_hypercharge:1147552215435849832> `{hcinfo[tag_element]['value']}/{maxHypercharges}`{'' if not hcInfoWarning else newline+'<:warning:1229332347086704661> '+infotext}",inline=True)
+        warning = emojidict['Warning']
+        embed.add_field(name=f"BRAWLER GEAR COMPLETION",value=f"{emojidict['GadgetIcon']} `{gadgetcount}/{maxGadgets}`\n{emojidict['SPIcon']} `{starpowercount}/{maxStarpower}`\n{emojidict['GearIcon']} `{gearcount}`\n{emojidict['HChargeIcon']} `{hcinfo[tag_element]['value']}/{maxHypercharges}`{'' if not hcInfoWarning else newline+warning+' '+infotext}",inline=True)
         embed.add_field(name=f"BRAWLER POWER COMPLETION",value=f"`P11     : {powerlevellist.count(11)}`\n`P10     : {powerlevellist.count(10)}`\n`P 9     : {powerlevellist.count(9)}`\n`Below P9: {len(data['brawlers']) - (powerlevellist.count(11)+powerlevellist.count(10)+powerlevellist.count(9))}`",inline=True)
-        embed.add_field(name=f"RESCOURCE DEFECIT",value=f"<:qito_pp:1147162040352374918> {neededPP:,}\n<:qito_coins:1147624181337432135> {neededCoins:,}\n<:credits:1282691710710845450> {maxcredits:,}\nIncludes P11, {2 if advanced else 1} SP, {2 if advanced else 1} Gadget and {6 if advanced else 2} Gears per brawler,\nas well as all available Hypercharges\n{'Does not include saved up rescources'}{'' if not outdatedlist else newline+'<:warning:1229332347086704661> Credit requirements outdated.'}",inline=False)
+        embed.add_field(name=f"RESCOURCE DEFECIT",value=f"{emojidict['PPoint']} {neededPP:,}\n{emojidict['Coin']} {neededCoins:,}\n{emojidict['Credit']} {maxcredits:,}\nIncludes P11, {2 if advanced else 1} SP, {2 if advanced else 1} Gadget and {6 if advanced else 2} Gears per brawler,\nas well as all available Hypercharges\n{'Does not include saved up rescources'}{'' if not outdatedlist else newline+warning+' Credit requirements outdated.'}",inline=False)
         if not advanced:
             embed.add_field(name=f"TOTAL PROGRESSION",value=f"{maxed} / {len(data['brawlers'])} maxed brawlers\nCompletion% : {round(((maxCurrency-neededCurrency)/maxCurrency)*100,2)}%",inline=False)
         else:
             embed.add_field(name=f"TOTAL PROGRESSION",value=f"{maxed} / {len(data['brawlers'])} maxed brawlers\nCompletion% : {round(((maxCurrencyAdv-neededCurrency)/maxCurrencyAdv)*100,2)}%",inline=False)
         if str(ctx.author_id) not in tags:
-            embed.add_field(name="<:info:1229350084299194388>", value="Is this profile yours? Link it with /profilelink to get more utility!")
+            embed.add_field(name=f"{emojidict['Info']}", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
@@ -1477,10 +1495,10 @@ async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: in
     with open("bs_hc_info.json","r") as f:
         hcinfo = json.load(f)
     if str(ctx.author.id) not in tags.keys():
-        await ctx.send(f"<:warning:1229332347086704661> Link your BS-Account with '/profilelink' first.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} Link your BS-Account with '/profilelink' first.",ephemeral=True)
         return
     if tagid > len(tags[str(ctx.author.id)]):
-        await ctx.send(f"<:warning:1229332347086704661> Provided Tag-ID is out of range.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} Provided Tag-ID is out of range.",ephemeral=True)
         return
     tagid -= 1
     try:
@@ -1493,12 +1511,12 @@ async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: in
                 raise Exception()
         else:
             if prevhc == -1:
-                await ctx.send(f"<:warning:1229332347086704661> No Hypercharge record.",ephemeral=True)
+                await ctx.send(f"{emojidict['Warning']} No Hypercharge record.",ephemeral=True)
                 return
             else:
                 prevhc += amount
     except:
-        await ctx.send(f"<:warning:1229332347086704661> This exceeds the maximum amount of Hypercharges obtainable.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} This exceeds the maximum amount of Hypercharges obtainable.",ephemeral=True)
         return
     hcinfo[tags[str(ctx.author.id)][tagid]] = {"value":amount if mode == 'set' else prevhc,"time":time.time()}
     await ctx.send(f"Hypercharge count of [{tags[str(ctx.author.id)][tagid]}] updated to {hcinfo[tags[str(ctx.author.id)][tagid]]['value']}.")
@@ -1515,7 +1533,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
     if str(ctx.author.id) not in tags:
-        await ctx.send("<:warning:1229332347086704661> No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
         return
     tag = tag.upper()
     if tag == "":
@@ -1524,7 +1542,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         try:
             tag = tags[str(ctx.author.id)][tagid]
         except:
-            await ctx.send(f"<:warning:1229332347086704661> Tag under ID {tagid+1} is not set.",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} Tag under ID {tagid+1} is not set.",ephemeral=True)
             return
     else:
         override = False
@@ -1546,7 +1564,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         pass
     try:
         if data["message"] == "API at maximum capacity, request throttled.":
-            await ctx.send("<:qito_error:1137124869713166416> API is overloaded.\n-# Try again later.",ephemeral=True)
+            await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.",ephemeral=True)
             return
     except:
         pass
@@ -1563,16 +1581,16 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         else:
             duel_mode = False
             if "teams" not in data["battle"].keys():
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode")
+                await ctx.send(f"{emojidict['Warning']} Unsupported Mode")
                 return
             if len(data["battle"]["teams"]) != 2:
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Allowed: 3v3, 5v5, Solo SD")
+                await ctx.send(f"{emojidict['Warning']} Unsupported Mode\n-# Allowed: 3v3, 5v5, Solo SD")
                 return
             if len(data["battle"]["teams"][0]) != len(data["battle"]["teams"][1]):
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly battles are excluded.")
+                await ctx.send(f"{emojidict['Warning']} Unsupported Mode\n-# Friendly battles are excluded.")
                 return
             if len(data["battle"]["teams"][0]) not in [3,5]:
-                await ctx.send("<:warning:1229332347086704661> Unsupported Mode\n-# Friendly battles are excluded.")
+                await ctx.send(f"{emojidict['Warning']} Unsupported Mode\n-# Friendly battles are excluded.")
                 return
             else:
                 mode5v5 = len(data["battle"]["teams"][1]) == 5
@@ -1627,8 +1645,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 index2 += 1
             if ppscore >= 1000000 and not ex_certified:
                 ppscore = 999999
-            rank = "<:tranknone:1134890614635372675>"
-            rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
+            rank = emojidict['RankNone']
+            rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
             index2 = 0
             for k in tsr_rank_thresholds:
                 if ppscore < k:
@@ -1653,7 +1671,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             tag_vis = "\n" + data['battle']['players'][i]['tag'] if show_tags else ""
             brawler_vis = data['battle']['players'][i]['brawler']['name']
             try:
-                starhighlight = ['<:goldstar:1153418516205162577>','<:silverstar:1153418444486758513>','<:bronzestar:1153418350970536007>'][i]
+                starhighlight = [emojidict['Gold'],emojidict['Silver'],emojidict['Bronze']][i]
             except:
                 starhighlight = ""
             embed.add_field(name=f"#{i+1} | "+data['battle']['players'][i]['name']+" "+starhighlight,
@@ -1670,7 +1688,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 targettt = extensionlist[i]['trophies']
         if botmatch:
             del embed
-            await ctx.send(f"<:warning:1229332347086704661> The scanned match is a bot-match and therefore can't get evaluated.")
+            await ctx.send(f"{emojidict['Warning']} The scanned match is a bot-match and therefore can't get evaluated.")
             return
         #enable after fixes!
         x = 1
@@ -1701,112 +1719,111 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 namelist.append(j["brawlers"][0]["name"])
             secondTeam = True if taglist.index(tag) > 2 else False
             extensionlist = []
-            if False:
-                await ctx.send("<:warning:1229332347086704661> 5v5 `/matchanalysis` is in development.\n-# Please check back later")
-            else:
-                for i, j, k in zip(taglist, trophylist, namelist):
-                    tag = urllib.parse.quote(i)
-                    url = f"https://api.brawlstars.com/v1/players/{tag}/"
+            for i, j, k in zip(taglist, trophylist, namelist):
+                tag = urllib.parse.quote(i)
+                url = f"https://api.brawlstars.com/v1/players/{tag}/"
 
-                    headers = {
-                        "Accept": "application/json",
-                        "Authorization": f"Bearer {bs_api_token}"
-                    }
+                headers = {
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {bs_api_token}"
+                }
 
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(url, headers=headers) as response:
-                            exdata = await response.json()
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, headers=headers) as response:
+                        exdata = await response.json()
 
-                    ssdv = exdata["soloVictories"]
-                    dsdv = exdata["duoVictories"]
-                    v3v = exdata["3vs3Victories"]
-                    sdr = int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)
-                    
-                    brawlerlist = exdata["brawlers"]
-                    gadgetcount = {}
-                    spcount = {}
-                    gearcount = {}
-                    for l in brawlerlist:
-                        gadgetcount[l["name"]] = len(l["gadgets"])
-                        spcount[l["name"]] = len(l["starPowers"])
-                        gearcount[l["name"]] = len(l["gears"])
-                    def brawlersort(a):
-                        return a["trophies"]
-                    brawlerlist.sort(reverse=True,key=brawlersort)
-                    pplist = []
-                    for l in range(9):
-                        try:
-                            pplist.append(brawlerlist[l]["trophies"]-500 if brawlerlist[l]["trophies"]-500 > 0 else 0)
-                        except:
-                            pass
-                    ppscore = 0
-                    index2 = 0
-                    for l in pplist:
-                        ppscore += int(round(1.7777777*((l if l < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
-                        ppscore += (l - 750) if l > 750 else 0
+                ssdv = exdata["soloVictories"]
+                dsdv = exdata["duoVictories"]
+                v3v = exdata["3vs3Victories"]
+                sdr = int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)
+                
+                brawlerlist = exdata["brawlers"]
+                gadgetcount = {}
+                spcount = {}
+                gearcount = {}
+                for l in brawlerlist:
+                    gadgetcount[l["name"]] = len(l["gadgets"])
+                    spcount[l["name"]] = len(l["starPowers"])
+                    gearcount[l["name"]] = len(l["gears"])
+                def brawlersort(a):
+                    return a["trophies"]
+                brawlerlist.sort(reverse=True,key=brawlersort)
+                pplist = []
+                for l in range(9):
+                    try:
+                        pplist.append(brawlerlist[l]["trophies"]-500 if brawlerlist[l]["trophies"]-500 > 0 else 0)
+                    except:
+                        pass
+                ppscore = 0
+                index2 = 0
+                for l in pplist:
+                    ppscore += int(round(1.7777777*((l if l < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
+                    ppscore += (l - 750) if l > 750 else 0
+                    index2 += 1
+                rank = emojidict['RankNone']
+                rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
+                index2 = 0
+                for l in tsr_rank_thresholds:
+                    if ppscore < l:
+                        break
+                    else:
+                        rank = rankiconlist[index2]
                         index2 += 1
-                    rank = "<:tranknone:1134890614635372675>"
-                    rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
-                    index2 = 0
-                    for l in tsr_rank_thresholds:
-                        if ppscore < l:
-                            break
-                        else:
-                            rank = rankiconlist[index2]
-                            index2 += 1
-                    extensionlist.append({"trophies":exdata["trophies"],"tsr":ppscore,"rank":rank,"sdr":sdr,"gadgets":gadgetcount,"sp":spcount,"gears":gearcount})
-                embed = interactions.Embed(title=result,
-                    color=0x6f06ee,
-                    timestamp=datetime.datetime.now())
-                if data['event']['map'] is None:
-                    matchmap = "MAP MAKER"
-                else:
-                    matchmap = data['event']['map'].upper()
-                botmatch = False
-                embed.set_author(name=f"Scanned Battle // {battletype} on '{matchmap}'")
-                tag_vis = "\n" + data['battle']['players'][0]['tag'] if show_tags else ""
-                embed.add_field(name=data['battle']['players'][0]['name']+tag_vis,
-                                    value=f"{extensionlist[0]['trophies']:,} Trophies | {extensionlist[0]['tsr']:,} tsr {extensionlist[0]['rank']}{' / <:warning:1229332347086704661> SDR '+str(extensionlist[0]['sdr']) if extensionlist[0]['sdr'] > 40 else ''}",
-                                    inline=False)
-                for i in range(3):
-                    gadgetindicator = "<:gadget:1228965764631892069>" if extensionlist[0]["gadgets"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if extensionlist[0]["sp"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=data['battle']['players'][0]['brawlers'][i]['name'],
-                                    value=f"{powericonlist[data['battle']['players'][0]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][0]['brawlers'][i]['trophies']:,}]",
-                                    inline=True)
-                embed.add_field(name="----------",
-                                value=" ",
+                extensionlist.append({"trophies":exdata["trophies"],"tsr":ppscore,"rank":rank,"sdr":sdr,"gadgets":gadgetcount,"sp":spcount,"gears":gearcount})
+            embed = interactions.Embed(title=result,
+                color=0x6f06ee,
+                timestamp=datetime.datetime.now())
+            if data['event']['map'] is None:
+                matchmap = "MAP MAKER"
+            else:
+                matchmap = data['event']['map'].upper()
+            botmatch = False
+            embed.set_author(name=f"Scanned Battle // {battletype} on '{matchmap}'")
+            tag_vis = "\n" + data['battle']['players'][0]['tag'] if show_tags else ""
+            warning = emojidict['Warning']
+            embed.add_field(name=data['battle']['players'][0]['name']+tag_vis,
+                                value=f"{extensionlist[0]['trophies']:,} Trophies | {extensionlist[0]['tsr']:,} tsr {extensionlist[0]['rank']}{f' / {warning} SDR '+str(extensionlist[0]['sdr']) if extensionlist[0]['sdr'] > 40 else ''}",
+                                inline=False)
+            for i in range(3):
+                gadgetindicator = emojidict['Gadget_OK'] if extensionlist[0]["gadgets"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                spindicator = emojidict['SP_OK'] if extensionlist[0]["sp"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator1 = emojidict['SP_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator2 = emojidict['SP_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
+                embed.add_field(name=data['battle']['players'][0]['brawlers'][i]['name'],
+                                value=f"{powericonlist[data['battle']['players'][0]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][0]['brawlers'][i]['trophies']:,}]",
                                 inline=True)
-                embed.add_field(name="VERSUS",
-                                value=" ",
+            embed.add_field(name="----------",
+                            value=" ",
+                            inline=True)
+            embed.add_field(name="VERSUS",
+                            value=" ",
+                            inline=True)
+            embed.add_field(name="----------",
+                            value=" ",
+                            inline=True)
+            tag_vis = "\n" + data['battle']['players'][1]['tag'] if show_tags else ""
+            warning = emojidict['Warning']
+            embed.add_field(name=data['battle']['players'][1]['name']+tag_vis,
+                                value=f"{extensionlist[1]['trophies']:,} Trophies | {extensionlist[1]['tsr']:,} tsr {extensionlist[1]['rank']}{f' / {warning} SDR '+str(extensionlist[1]['sdr']) if extensionlist[1]['sdr'] > 40 else ''}",
+                                inline=False)
+            for i in range(3):
+                gadgetindicator = emojidict['Gadget_OK'] if extensionlist[1]["gadgets"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                spindicator = emojidict['SP_OK'] if extensionlist[1]["sp"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator1 = emojidict['SP_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator2 = emojidict['SP_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
+                embed.add_field(name=data['battle']['players'][1]['brawlers'][i]['name'],
+                                value=f"{powericonlist[data['battle']['players'][1]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][1]['brawlers'][i]['trophies']:,}]",
                                 inline=True)
-                embed.add_field(name="----------",
-                                value=" ",
-                                inline=True)
-                tag_vis = "\n" + data['battle']['players'][1]['tag'] if show_tags else ""
-                embed.add_field(name=data['battle']['players'][1]['name']+tag_vis,
-                                    value=f"{extensionlist[1]['trophies']:,} Trophies | {extensionlist[1]['tsr']:,} tsr {extensionlist[1]['rank']}{' / <:warning:1229332347086704661> SDR '+str(extensionlist[1]['sdr']) if extensionlist[1]['sdr'] > 40 else ''}",
-                                    inline=False)
-                for i in range(3):
-                    gadgetindicator = "<:gadget:1228965764631892069>" if extensionlist[1]["gadgets"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if extensionlist[1]["sp"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 1 else "<:no_util:1228965782390702201>"
-                    embed.add_field(name=data['battle']['players'][1]['brawlers'][i]['name'],
-                                    value=f"{powericonlist[data['battle']['players'][1]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][1]['brawlers'][i]['trophies']:,}]",
-                                    inline=True)
-                embed.add_field(name="-----",value=" ",inline=False)
-                result = -1 * (int(extensionlist[0]['trophies'])-int(extensionlist[1]['trophies']) if not secondTeam else int(extensionlist[1]['trophies'])-int(extensionlist[0]['trophies']))
-                embed.add_field(name="Average Total Trophy-Deviation",
-                                value=f"{'+' if result > 0 else ''}{result:,}",
-                                inline=True)
-                result = -1 * (int(extensionlist[0]['tsr'])-int(extensionlist[1]['tsr']) if not secondTeam else int(extensionlist[1]['tsr'])-int(extensionlist[0]['tsr']))
-                embed.add_field(name="Average TSR-Deviation",
-                                value=f"{'+' if result > 0 else ''}{result:,}",
-                                inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
+            embed.add_field(name="-----",value=" ",inline=False)
+            result = -1 * (int(extensionlist[0]['trophies'])-int(extensionlist[1]['trophies']) if not secondTeam else int(extensionlist[1]['trophies'])-int(extensionlist[0]['trophies']))
+            embed.add_field(name="Average Total Trophy-Deviation",
+                            value=f"{'+' if result > 0 else ''}{result:,}",
+                            inline=True)
+            result = -1 * (int(extensionlist[0]['tsr'])-int(extensionlist[1]['tsr']) if not secondTeam else int(extensionlist[1]['tsr'])-int(extensionlist[0]['tsr']))
+            embed.add_field(name="Average TSR-Deviation",
+                            value=f"{'+' if result > 0 else ''}{result:,}",
+                            inline=True)
+            embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         else:
             result = data["battle"]["result"].upper()
             battletype = data["battle"]["mode"].upper()
@@ -1829,7 +1846,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             secondTeam = True if taglist.index(tag) > 2 else False
             extensionlist = []
             if mode5v5:
-                await ctx.send("<:warning:1229332347086704661> 5v5 `/matchanalysis` is in development.\n-# Please check back later")
+                await ctx.send(f"{emojidict['Warning']} 5v5 `/matchanalysis` is in development.\n-# Please check back later")
             else:
                 for i, j, k in zip(taglist, trophylist, namelist):
                     tag = urllib.parse.quote(i)
@@ -1871,8 +1888,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                         ppscore += int(round(1.7777777*((l if l < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
                         ppscore += (l - 750) if l > 750 else 0
                         index2 += 1
-                    rank = "<:tranknone:1134890614635372675>"
-                    rankiconlist = list({"E":"<:rank_e:1262541950561812601>","D":"<:rank_d:1262542011576356915>","D+":"<:rank_d_plus:1262542055326879858>","C-":"<:rank_c_minus:1262542122469294121>","C":"<:rank_c:1262542167440756847>","C+":"<:rank_c_plus:1262542219714494484>","B-":"<:rank_b_minus:1262542285644501095>","B":"<:rank_b:1262543019417014333>","B+":"<:rank_b_plus:1262543136291426394>","A-":"<:rank_a_minus:1262543188908839022>","A":"<:rank_a:1262543236518383616>","A+":"<:rank_a_plus:1262543274506457089>","S-":"<:rank_s_minus:1263948719577894922> ","S":"<:rank_s:1263948731167015013>","S+":"<:rank_s_plus:1263948744286802021>","SS":"<:rank_ss:1263953646245384274>","X":"<:trankx:1133686283093426256>"}.values())
+                    rank = emojidict['RankNone']
+                    rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
                     index2 = 0
                     for l in tsr_rank_thresholds:
                         if ppscore < l:
@@ -1897,16 +1914,17 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 tttc1 = 0
                 for i in range(3):
                     tag_vis = "\n" + data['battle']['teams'][0][i]['tag'] if show_tags else ""
-                    gadgetindicator = "<:gadget:1228965764631892069>" if extensionlist[i]["gadgets"] > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if extensionlist[i]["sp"] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if extensionlist[i]["gears"] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if extensionlist[i]["gears"] > 1 else "<:no_util:1228965782390702201>"
+                    gadgetindicator = emojidict['Gadget_OK'] if extensionlist[i]["gadgets"] > 0 else emojidict['Slot_Empty']
+                    spindicator = emojidict['SP_OK'] if extensionlist[i]["sp"] > 0 else emojidict['Slot_Empty']
+                    gearindicator1 = emojidict['SP_OK'] if extensionlist[i]["gears"] > 0 else emojidict['Slot_Empty']
+                    gearindicator2 = emojidict['SP_OK'] if extensionlist[i]["gears"] > 1 else emojidict['Slot_Empty']
                     if not isRankedDiv:
-                        embed.add_field(name=data['battle']['teams'][0][i]['name']+"<:goldstar:1153418516205162577>"+tag_vis if starplayertag == data['battle']['teams'][0][i]['tag'] else data['battle']['teams'][0][i]['name']+tag_vis,
-                                        value=f"{data['battle']['teams'][0][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][0][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['teams'][0][i]['brawler']['trophies']:,}]\n\n{extensionlist[i]['trophies']:,} Trophies\n{extensionlist[i]['tsr']:,} tsr\n{extensionlist[i]['rank']}{' / <:warning:1229332347086704661> SDR '+str(extensionlist[i]['sdr']) if extensionlist[i]['sdr'] > 40 else ''}",
+                        warning = emojidict['Warning']
+                        embed.add_field(name=data['battle']['teams'][0][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][0][i]['tag'] else data['battle']['teams'][0][i]['name']+tag_vis,
+                                        value=f"{data['battle']['teams'][0][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][0][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['teams'][0][i]['brawler']['trophies']:,}]\n\n{extensionlist[i]['trophies']:,} Trophies\n{extensionlist[i]['tsr']:,} tsr\n{extensionlist[i]['rank']}{f' / {warning} SDR '+str(extensionlist[i]['sdr']) if extensionlist[i]['sdr'] > 40 else ''}",
                                         inline=True)
                     else:
-                        embed.add_field(name=data['battle']['teams'][0][i]['name']+"<:goldstar:1153418516205162577>"+tag_vis if starplayertag == data['battle']['teams'][0][i]['tag'] else data['battle']['teams'][0][i]['name']+tag_vis,
+                        embed.add_field(name=data['battle']['teams'][0][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][0][i]['tag'] else data['battle']['teams'][0][i]['name']+tag_vis,
                                         value=f"{data['battle']['teams'][0][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][0][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{['','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][data['battle']['teams'][0][i]['brawler']['trophies']]}]\n\n{extensionlist[i]['trophies']:,} Trophies\n{extensionlist[i]['tsr']:,} tsr\n{extensionlist[i]['rank']}",
                                         inline=True)
                         if data['battle']['teams'][0][i]['tag'] not in pl_saves:
@@ -1933,16 +1951,17 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 tttc2 = 0
                 for i in range(3):
                     tag_vis = "\n" + data['battle']['teams'][1][i]['tag'] if show_tags else ""
-                    gadgetindicator = "<:gadget:1228965764631892069>" if extensionlist[3+i]["gadgets"] > 0 else "<:no_util:1228965782390702201>"
-                    spindicator = "<:sp:1228965791639277659>" if extensionlist[3+i]["sp"] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator1 = "<:gear:1228965774199230474>" if extensionlist[3+i]["gears"] > 0 else "<:no_util:1228965782390702201>"
-                    gearindicator2 = "<:gear:1228965774199230474>" if extensionlist[3+i]["gears"] > 1 else "<:no_util:1228965782390702201>"
+                    gadgetindicator = emojidict['Gadget_OK'] if extensionlist[3+i]["gadgets"] > 0 else emojidict['Slot_Empty']
+                    spindicator = emojidict['SP_OK'] if extensionlist[3+i]["sp"] > 0 else emojidict['Slot_Empty']
+                    gearindicator1 = emojidict['SP_OK'] if extensionlist[3+i]["gears"] > 0 else emojidict['Slot_Empty']
+                    gearindicator2 = emojidict['SP_OK'] if extensionlist[3+i]["gears"] > 1 else emojidict['Slot_Empty']
                     if not isRankedDiv:
-                        embed.add_field(name=data['battle']['teams'][1][i]['name']+"<:goldstar:1153418516205162577>"+tag_vis if starplayertag == data['battle']['teams'][1][i]['tag'] else data['battle']['teams'][1][i]['name']+tag_vis,
-                                value=f"{data['battle']['teams'][1][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][1][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['teams'][1][i]['brawler']['trophies']:,}]\n\n{extensionlist[3+i]['trophies']:,} Trophies\n{extensionlist[3+i]['tsr']:,} tsr\n{extensionlist[3+i]['rank']}{' / <:warning:1229332347086704661> SDR '+str(extensionlist[3+i]['sdr']) if extensionlist[3+i]['sdr'] > 40 else ''}",
+                        warning = emojidict['Warning']
+                        embed.add_field(name=data['battle']['teams'][1][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][1][i]['tag'] else data['battle']['teams'][1][i]['name']+tag_vis,
+                                value=f"{data['battle']['teams'][1][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][1][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['teams'][1][i]['brawler']['trophies']:,}]\n\n{extensionlist[3+i]['trophies']:,} Trophies\n{extensionlist[3+i]['tsr']:,} tsr\n{extensionlist[3+i]['rank']}{f' / {warning} SDR '+str(extensionlist[3+i]['sdr']) if extensionlist[3+i]['sdr'] > 40 else ''}",
                                 inline=True)
                     else:
-                        embed.add_field(name=data['battle']['teams'][1][i]['name']+"<:goldstar:1153418516205162577>"+tag_vis if starplayertag == data['battle']['teams'][1][i]['tag'] else data['battle']['teams'][1][i]['name']+tag_vis,
+                        embed.add_field(name=data['battle']['teams'][1][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][1][i]['tag'] else data['battle']['teams'][1][i]['name']+tag_vis,
                                         value=f"{data['battle']['teams'][1][i]['brawler']['name']}\n{powericonlist[data['battle']['teams'][1][i]['brawler']['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{['','BRONZE 1','BRONZE 2','BRONZE 3','SILVER 1','SILVER 2','SILVER 3','GOLD 1','GOLD 2','GOLD 3','DIAMOND 1','DIAMOND 2','DIAMOND 3','MYTHIC 1','MYTHIC 2','MYTHIC 3','LEGENDARY 1','LEGENDARY 2','LEGENDARY 3','MASTER'][data['battle']['teams'][1][i]['brawler']['trophies']]}]\n\n{extensionlist[3+i]['trophies']:,} Trophies\n{extensionlist[3+i]['tsr']:,} tsr\n{extensionlist[3+i]['rank']}",
                                         inline=True)
                         if data['battle']['teams'][1][i]['tag'] not in pl_saves:
@@ -1957,7 +1976,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                         botmatch = True
                 if botmatch:
                     del embed
-                    await ctx.send(f"<:warning:1229332347086704661> The scanned match is a bot-match and thus can't get evaluated.")
+                    await ctx.send(f"{emojidict['Warning']} The scanned match is a bot-match and thus can't get evaluated.")
                     return
                 embed.add_field(name="-----",value=" ",inline=False)
                 if not isRankedDiv:
@@ -1997,10 +2016,10 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
         with open("bs_tags.json") as f:
             x = json.load(f)
             if str(ctx.author_id) not in x.keys():
-                await ctx.send("<:warning:1229332347086704661> No tags linked.\n-# You have yet to use this bot. Go for it!",ephemeral=True)
+                await ctx.send(f"{emojidict['Warning']} No tags linked.\n-# You have yet to use this bot. Go for it!",ephemeral=True)
                 return
             if tagid > len(x[str(ctx.author_id)]):
-                await ctx.send(f"<:warning:1229332347086704661> Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}",ephemeral=True)
+                await ctx.send(f"{emojidict['Warning']} Selected slot empty.\n-# Filled slots: {len(x[str(ctx.author_id)])}",ephemeral=True)
                 return
             i = x[str(ctx.author_id)][tagid-1]
 
@@ -2111,12 +2130,12 @@ async def history(ctx: interactions.SlashContext, timespan: str, dataset: str, g
             plt.savefig(f"graphs/{i}_{timespan}_{dataset}.png", bbox_inches="tight")
             plt.close()
         else:
-            await ctx.send("<:warning:1229332347086704661> No data available yet.\n-# Use the bot more!",ephemeral=True)
+            await ctx.send(f"{emojidict['Warning']} No data available yet.\n-# Use the bot more!",ephemeral=True)
             return
         file = interactions.File(f"graphs/{i}_{timespan}_{dataset}.png")
         await ctx.send(f"-# Activate AutoSync via `/autosync` to get more data automatically.",file=file)
     except Exception as e:
-        await ctx.send(f"<:warning:1229332347086704661> An error occured.\n```{e}\n{str(e)}```",ephemeral=True)
+        await ctx.send(f"{emojidict['Warning']} An error occured.\n```{e}\n{str(e)}```",ephemeral=True)
 
 @interactions.slash_command(name="status", description="Check if the bot (and it's services) are functional.")
 async def status(ctx: interactions.SlashContext):
@@ -2158,11 +2177,11 @@ async def status(ctx: interactions.SlashContext):
                         timestamp=datetime.datetime.now())
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="API-Node [Profile]",value=f"<:qito_error:1137124869713166416> [{response_d}]" if response_d != 200 else f"<:qito_connected:1140550294313373766> [{response_d}]",inline=True)
-    embed.add_field(name="API-Node [Battle-History]",value=f"<:qito_error:1137124869713166416> [{response_b}]" if response_b != 200 else f"<:qito_connected:1140550294313373766> [{response_b}]",inline=True)
-    embed.add_field(name="API-Node [Brawlers]",value=f"<:qito_error:1137124869713166416> [{response_c}]" if response_c != 200 else f"<:qito_connected:1140550294313373766> [{response_c}]",inline=True)
+    embed.add_field(name="API-Node [Profile]",value=f"{emojidict['Error']} [{response_d}]" if response_d != 200 else f"{emojidict['Connected']} [{response_d}]",inline=True)
+    embed.add_field(name="API-Node [Battle-History]",value=f"{emojidict['Error']} [{response_b}]" if response_b != 200 else f"{emojidict['Connected']} [{response_b}]",inline=True)
+    embed.add_field(name="API-Node [Brawlers]",value=f"{emojidict['Error']} [{response_c}]" if response_c != 200 else f"{emojidict['Connected']} [{response_c}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="Extension API",value=f"<:qito_error:1137124869713166416> [{response_e}]" if response_e != 0 else f"<:qito_connected:1140550294313373766> [{response_e}]",inline=True)
+    embed.add_field(name="Extension API",value=f"{emojidict['Error']} [{response_e}]" if response_e != 0 else f"{emojidict['Connected']} [{response_e}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.set_footer(text="Shenzhia",
@@ -2182,7 +2201,7 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
     if "data" in data:
         output = data["data"][random.randint(0,59)]["link"]
     else:
-        output = "<:qito_error:1137124869713166416> Access to imgur-API was denied. Ask Qi to look into it."
+        output = f"{emojidict['Error']} Access to imgur-API was denied. Ask Qi to look into it."
     await ctx.send(output,ephemeral=hidden)
 
 @interactions.slash_command(name="gallery", description="View art of Shenzhia.")
@@ -2221,6 +2240,6 @@ async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
     try:
         await ctx.send(f"Rolled: {random.choice(userinput.split(sep=','))}")
     except:
-        await ctx.send(f"<:qito_error:1137124869713166416> Something went wrong.")
+        await ctx.send(f"{emojidict['Error']}: Something went wrong.")
 
 bot.start(discord_bot_token[login])

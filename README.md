@@ -39,6 +39,11 @@ Shenzhia needs additional resources outside of python related to you. These cons
 > [!WARNING]
 > You can use the bot without Sentry's service, this however requires editing Shenzhia's code.
 
+### Custom Emojis
+Many custom Emojis are used with Shenzhia. On the first run setup, you set emojis so they can be displayed.
+
+To be able to set emojis, [follow the instructions here.](https://github.com/SweetPinkMilkTea/shenzhia/wiki/Setting-Emojis)
+
 ## Installing
 - Clone the repo into the directory of your choice
 - `cd` into the directory
@@ -66,6 +71,8 @@ You can assign a name to your Discord bot token.
 When starting the bot after the setup has concluded, you can save multiple bot tokens to switch between them (for example when testing while a stable version is already running).
 
 You will also be asked for a logging channel and an "Admin-Server". Paste their respective IDs to assign them.
+
+Finally, set all needed Emojis.
 
 After entering everything, your first-run-setup is done!
 
