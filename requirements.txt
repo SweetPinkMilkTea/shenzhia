@@ -70,7 +70,7 @@ torrequest==0.1.0
 tqdm==4.66.1
 typing_extensions==4.10.0
 tzdata==2024.1
-urllib3==2.0.7
+urllib3==2.2.2
 websockets==12.0
 Werkzeug==3.0.2
 yarl==1.9.2
