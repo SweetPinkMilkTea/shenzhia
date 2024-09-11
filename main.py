@@ -225,6 +225,10 @@ startuptime = int(time.time())
 bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False)
 bot.load_extension('interactions.ext.sentry', token=dsn)
 
+# ----------------
+# ROUTINE TASKS
+# ----------------
+
 @interactions.listen(CommandError, disable_default_listeners=False)
 async def on_command_error(event: CommandError):
     traceback.print_exception(event.error)
@@ -342,11 +346,12 @@ async def autosync():
     # Send success message to dev channel
     channel = bot.get_channel(logger)
     if silence <= time.time():
-        await channel.send(f"Auto-Request completed. {'' if not errors else str(errors)+' errors encountered.'}", silent=True)
+        nl = "\n"
+        await channel.send(f"Auto-Request completed. {'' if not errors else nl+str(errors)+'x errors encountered.'}", silent=True)
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=3))
 async def bs_player_leaderboard():
-    global bs_leaderboard_data, bs_guild_leaderboard_data, bsdict
+    global bs_leaderboard_data, bs_local_leaderboard_data, bsdict
     with open("bs_data.json") as f:
         bsdict = json.load(f)
     # global
@@ -362,7 +367,6 @@ async def bs_player_leaderboard():
             data = await response.json()
     try:
         print(data["reason"])
-        #Send error to dev channel and stop task
         channel = bot.get_channel(logger)
         await channel.send(f"{emojidict['Error']} Leaderboard data request failed! Task was abandoned.\n\nReason: {data['message']}")
         return
@@ -372,40 +376,34 @@ async def bs_player_leaderboard():
     for i in data["items"]:
         bs_leaderboard_data.append(i["tag"])
     channel = bot.get_channel(logger)
-    # guild
-    bs_guild_leaderboard_data_temp = []
+    # local
+    bs_local_leaderboard_data_temp = []
     with open("bs_tags.json","r") as f:
         tags = json.load(f)
     with open("tsr_best.json") as f:
         tsrbest = json.load(f)
     for i in tags.values():
         try:
-            bs_guild_leaderboard_data_temp.append([tsrbest[i[0]],i[0]])
+            bs_local_leaderboard_data_temp.append([tsrbest[i[0]],i[0]])
         except:
             pass
-    bs_guild_leaderboard_data_temp.sort(reverse=True)
-    bs_guild_leaderboard_data = []
-    for i in bs_guild_leaderboard_data_temp:
+    bs_local_leaderboard_data_temp.sort(reverse=True)
+    bs_local_leaderboard_data = []
+    for i in bs_local_leaderboard_data_temp:
         try:
             if len(bsdict[i[1]]['history']) != 0:
-                bs_guild_leaderboard_data.append(i[1])
+                bs_local_leaderboard_data.append(i[1])
         except:
             pass
     # finish
     with open("bs_guild_leaderboard_data.json","w") as f:
-        json.dump(bs_guild_leaderboard_data,f)
+        json.dump(bs_local_leaderboard_data,f)
     if silence <= time.time():
         await channel.send(f"Global Leaderboard data updated.", silent=True)
     print("Global Leaderboard data updated.")
 
 @interactions.Task.create(interactions.IntervalTrigger(hours=3))
 async def ar_refresh():
-    # >>> About AR
-    # TSR    : Every Rank Div - +1 AR
-    # Ranked : Every Rank Div - +1 AR
-    # SDR    : int(abs(SDR-100)/10) AR
-    # ABT    : -> TSR / 2
-
     with open("bs_tags.json") as f:
         tagdict = json.load(f)
     tags = []
@@ -564,10 +562,6 @@ async def export(ctx: interactions.SlashContext, listdir: bool = False, query: s
             await ctx.send(f"{emojidict['Warning']} Resource does not exist. Typo?")
             return
 
-@interactions.slash_command(name="raiseerror", description="Force an error for tracking purposes", scopes=[scope])
-async def raiseerror(ctx: interactions.SlashContext):
-    raise ManualRaisedException("This Exception was forced manually.")
-
 @interactions.slash_command(name="silenceverbose", description="Mute the periodic task output for a set amount to time", scopes=[scope])
 @interactions.slash_option(name="duration", description="Amount of minutes to mute for. Set to 0 to remove any currently active silence.", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0)
 async def silenceverbose(ctx: interactions.SlashContext, duration: int):
@@ -618,12 +612,6 @@ async def paginatortest(ctx: interactions.SlashContext):
     paginator.callback = test()
     await paginator.send(ctx)
 
-@interactions.slash_command(name="asyncdelay", description="Testing async", scopes=[scope])
-async def asyncdelay(ctx: interactions.SlashContext):
-    await ctx.send("Delaying...")
-    await asyncio.sleep(10)
-    await ctx.send("Released delay.")
-
 def test():
     print("!!!")
 
@@ -653,7 +641,7 @@ async def whois(ctx: interactions.SlashContext, id: str):
         await ctx.send(embed=embed)
         return
     
-@interactions.slash_command(name="leaderboard", description="Find the best Shenzhia users for brawlers or overall!")
+@interactions.slash_command(name="leaderboard", description="Find the best Shenzhia users!")
 async def leaderboard(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_data.json") as f:
@@ -673,13 +661,11 @@ async def leaderboard(ctx: interactions.SlashContext):
                 timestamp=datetime.datetime.now())
     index = 0
     placement = 1
-    for i in bs_guild_leaderboard_data[:9]:
+    for i in bs_local_leaderboard_data[:9]:
         userelement = await bot.fetch_user(tag_dict[i])
         rank = emojidict['RankNone']
         rlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
         index2 = 0
-        #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
-        #         -  600         675                750                 800                  900           1000   1150    1250
         for j in tsr_rank_thresholds:
             if tsrbest[i] < j:
                 break
@@ -753,7 +739,7 @@ async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
     with open("dc_id_rel.json","w") as f:
         json.dump(name_dict,f) 
     if str(ctx.author.id) in tags:
-        if len(tags[str(ctx.author.id)]) >= 5:
+        if len(tags[str(ctx.author.id)]) >= 3:
             await ctx.send(f"{emojidict['Warning']} Max # of links created.",ephemeral=True)
             return
         if tag.upper() in tags[str(ctx.author.id)]:
@@ -822,7 +808,7 @@ async def profilelinkview(ctx: interactions.SlashContext):
     embed = interactions.Embed(title=f"LINKED PROFILES",
                     color=0x6f07b4,
                     timestamp=datetime.datetime.now())
-    for i in range(5):
+    for i in range(3):
         if i > len(tags[str(ctx.author.id)]) - 1:
             embed.add_field(name=f"[{i+1}] - ///",value="*Empty slot*")
         else:
@@ -1149,8 +1135,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             rank = emojidict['RankNone']
             rlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
             index2 = 0
-            #         E   D     D+    C-    C     C+    B-     B      B+     A-     A      A+     S-      S     S+    S++      X         max
-            #         -  600         675                750                 800                  900           1000   1150    1250
             for i in tsr_rank_thresholds:
                 if ppscore < i:
                     break
@@ -1239,16 +1223,16 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             else:
                 icon = f"{emojidict['Bronze']} "
             embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
-        elif tag[0] in bs_guild_leaderboard_data[:9]:
-            if bs_guild_leaderboard_data.index(tag[0])+1 == 1:
+        elif tag[0] in bs_local_leaderboard_data[:9]:
+            if bs_local_leaderboard_data.index(tag[0])+1 == 1:
                 icon = f"{emojidict['Gold']} "
-            elif bs_guild_leaderboard_data.index(tag[0])+1 == 2:
+            elif bs_local_leaderboard_data.index(tag[0])+1 == 2:
                 icon = f"{emojidict['Silver']} "
-            elif bs_guild_leaderboard_data.index(tag[0])+1 == 3:
+            elif bs_local_leaderboard_data.index(tag[0])+1 == 3:
                 icon = f"{emojidict['Bronze']} "
             else:
                 icon = ""
-            embed.add_field(name=f"{icon}#{bs_guild_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
+            embed.add_field(name=f"{icon}#{bs_local_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
         else:
             embed.add_field(name=f"---",value=f" ",inline=False)
         while len(pplist_b) < (12 if not extend else 18):
@@ -1370,7 +1354,6 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="advanced", description="Calculate with 2 Gadgets, 2 SPs and 6 Gears instead", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: bool = False):
-    #await ctx.send(f"{emojidict['Warning']} This function is unavailable due to a defunct in the Brawl Stars API.\n-# Maybe check back later. :(",ephemeral=True)
     await ctx.defer()
     with open("bs_data.json") as f:
         bsdict = json.load(f)
@@ -1487,7 +1470,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
 @interactions.slash_command(name="hyperchargecount", description="Set the amount of Hypercharges you own. (Requires profile-linking)")
 @interactions.slash_option(name="mode", description="Whether to set an amount or increase an already existing one", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Set",value="set"),interactions.SlashCommandChoice(name="Increase",value="inc")])
 @interactions.slash_option(name="amount", description="Either Amount of Hypercharges you own or amount of Hypercharges to add", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=maxHypercharges)
-@interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
+@interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=3)
 async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: int, tagid: int = 1):
     await ctx.defer()
     with open("bs_tags.json","r") as f:
@@ -1527,7 +1510,7 @@ async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: in
 @interactions.slash_option(name="tag", description="Target Player (empty: self)", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="offset", description="Search for a less recent game (range: 0 - 24)", required=False, opt_type=interactions.OptionType.INTEGER, max_value=24, min_value=0)
 @interactions.slash_option(name="show_tags", description="Show scanned players tags along with thier name.", required=False, opt_type=interactions.OptionType.BOOLEAN)
-@interactions.slash_option(name="tagid", description="[Only on self] If multiple accounts are linked, index of target account. Defaults to first profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=5)
+@interactions.slash_option(name="tagid", description="[Only on self] If multiple accounts are linked, index of target account. Defaults to first profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=3)
 async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: int = 0, show_tags: bool = False, tagid: int = 1):
     await ctx.defer()
     with open("bs_tags.json","r") as f:
@@ -2201,7 +2184,7 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
     if "data" in data:
         output = data["data"][random.randint(0,59)]["link"]
     else:
-        output = f"{emojidict['Error']} Access to imgur-API was denied. Ask Qi to look into it."
+        output = f"{emojidict['Error']} Access to imgur-API was denied."
     await ctx.send(output,ephemeral=hidden)
 
 @interactions.slash_command(name="gallery", description="View art of Shenzhia.")
@@ -2209,7 +2192,7 @@ async def gallery(ctx: interactions.SlashContext):
     await ctx.defer(ephemeral=True)
     embeds = []
     for i in range(4,-1,-1):
-        embed = interactions.Embed(title=["Artsgui: '0x00000'","Sebixo: 'Dualboot'","Sebixo: 'Unexpected Exception'","VIPKiddo: 'http://'","Inji: 'Trirumvirate'","Inji: 'FTP-Share'"][i],
+        embed = interactions.Embed(title=["Artsgui: '0x00000'","Sebixo: 'Dual Boot'","Sebixo: 'Unexpected Exception'","VIPKiddo: 'http://'","Inji: 'Trirumvirate'","Inji: 'FTP-Share'"][i],
                       url=["https://x.com/GuilhermeArtz","https://x.com/Sebixo3priv","https://x.com/Sebixo3priv","https://x.com/VIPKiddo29","https://x.com/Inji_arts","https://x.com/Inji_arts"][i],
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
