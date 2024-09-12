@@ -18,16 +18,33 @@ Additionally, it can save and work with received data to further utilize API dat
 Shenzhia uses [`discord-interactions-py`](https://github.com/interactions-py/interactions.py) as it's Discord API wrapper. 
 
 # Setup
+## Create and Invite your Bot
+Visit [Discords Developer Platform](https://discord.com/developers) and create a bot.
+
+For it to work correctly, visit the "Installation" section and select the `bot` scope under "Default Install Settings" (while enabling Guild Installation).
+
+Next, check the following permissions:
+- Attach Files
+- Embed Links
+- Send Messages
+- Use external Emojis
+- Use Slash Commands
+- View Channels
+
+Invite your Bot to your server after.
+
+> [!IMPORTANT]>
+> This server will be an "Admin-Server" with additional privileged commands. Make sure only trusted users are inside this server, or create a server just for the bot instead.
+
 ## Prerequisites
 ### Software
 
 `Python >= 3.10` is required for certain packages.
 
-> [!NOTE]
-> v3.12 and above had issues with installing requirements.
-### API-Keys
+### API
+
 Shenzhia needs additional resources outside of python related to you. These consist of:
-- A Discord Bot Token via [Discords Developer Platform](https://discord.com/developers)
+- A Discord Bot Token gotten while creating your bot in [Discords Developer Platform](https://discord.com/developers)
 - A Brawl Stars API Token via their [Webpage](https://developer.brawlstars.com/#/)
 > [!NOTE]
 > The API requires your bot host's IP. If it's IP changes, you have to regenerate your key. 
@@ -96,7 +113,9 @@ Here are all rank icons. You can use them by copying their URLs.
 | EX | ![](https://cdn.discordapp.com/emojis/1133686283093426256.webp?size=44&quality=lossless) |
 
 ## Installing
-- Clone the repo into the directory of your choice
+
+- Clone the repo into the directory of your choice or download from the Releases
+    - When downloading from Releases, unpack the archive.
 - `cd` into the directory
 - Create a venv with `python -m venv .venv`
 - Activate it
@@ -106,12 +125,6 @@ Here are all rank icons. You can use them by copying their URLs.
 - Start `main.py` and follow any instructions that may occur (see next section)
 
 ## First Run
-
-> [!IMPORTANT]
-> Add your bot to a server and get it's and one of it's channels ID before starting `main.py`.
->
-> This server will be an "Admin-Server" with additional privileged commands. Make sure only trusted users are inside this server.
-
 > [!WARNING]
 > On the bot's first run, important files will be generated.
 > Avoid modifying code until the bot has successfully run once to avoid any unexpected behavior.
