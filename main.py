@@ -116,6 +116,9 @@ with open("verbose_silence.json") as f:
         silence = 0
 with open("symbols.json") as f:
     emojidict = json.load(f)
+    powericonlist = []
+    for i in range(1,12):
+        powericonlist.append(emojidict[f"Power{i}"])
 with open("dev_env.json") as f:
     dev_env = json.load(f)
     logger = int(dev_env["loggingchannel"])
@@ -130,7 +133,7 @@ if fastlogin == "":
     choice = input().strip()
     if choice == "":
         with open("dc_bot_tokens.json","r") as f:
-            discord_bot_token = json.load()
+            discord_bot_token = json.load(f)
         with open("dc_bot_tokens.json","w") as f:
             print("Discord Bottoken Setup\n---")
             a = ""
@@ -145,49 +148,37 @@ else:
     print("Fastlogin is active!")
 login = choice
 if choice not in discord_bot_token.keys():
-    sys.exit("Invalid bot token key.")
+    sys.exit("Invalid key for bot token provided.")
 
-
-while True:
-    url = f"https://api.brawlstars.com/v1/brawlers/"
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {bs_api_token}"
-    }       
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    outdatedIP = False
+calStatus = 0
+brawlerIDs = {}
+maxGadgets = maxStarpower = maxGear = maxCurrency = maxCurrencyAdv = maxBrawlers = maxHypercharges = 0
+def calibrate():
+    global brawlerIDs, maxGadgets, maxStarpower, maxGear, maxCurrency, maxCurrencyAdv, maxBrawlers, maxHypercharges, calStatus
     try:
-        backup = False
+        url = f"https://api.brawlstars.com/v1/brawlers/"
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {bs_api_token}"
+        }       
+        response = requests.get(url, headers=headers)
+        data = response.json()
         try:
             if data["message"] == "API at maximum capacity, request throttled.":
-                raise APIConnectionException("Overload!")
+                calStatus = response.status_code
         except:
             pass
         try:
             if data["reason"] == "unknownException":
-                print("API ERROR")
-                backup = True
+                calStatus = response.status_code
         except:
             pass
-
-    except APIConnectionException:
-        raise Exception()
-    try:
-        if backup:
-            raise Exception()
-        print(data["reason"])
-        print(urllib.request.urlopen('https://api4.ipify.org').read().decode('utf8'))
-        bs_api_token = input("Key seems expired - Enter a new one: ")
-        with open("bs_api_token.json", "r") as f:
-            bs_api_dict = json.load(f)
-        bs_api_dict["main"] = bs_api_token
-        with open("bs_api_token.json", "w") as f:
-            json.dump(bs_api_dict,f)
-    except:
-        brawlerIDs = {}
-        maxGadgets = maxStarpower = maxGear = maxCurrency = maxCurrencyAdv = 0
-        if not backup:
+        try:
+            print(data["reason"])
+            calStatus = response.status_code
+        except:
+            brawlerIDs = {}
+            maxGadgets = maxStarpower = maxGear = maxCurrency = maxCurrencyAdv = 0
             maxBrawlers = len(data["items"])
             for i in data["items"]:
                 brawlerIDs[i["id"]] = i['name']
@@ -195,21 +186,22 @@ while True:
                 maxStarpower += len(i["starPowers"])
                 maxCurrency += 20245
                 maxCurrencyAdv += 20245 + 6000
-        else:
-            maxBrawlers = 80
-            for i in range(maxBrawlers):
-                maxGadgets += 2
-                maxStarpower += 2
-                maxCurrency += 20245
-                maxCurrencyAdv += 20245 + 6000
-        break
-maxHypercharges = 43
-maxCurrency += maxHypercharges * 5000
-maxCurrencyAdv += maxHypercharges * 5000
-powericonlist = []
-for i in range(1,12):
-    powericonlist.append(emojidict[f"Power{i}"])
+            maxHypercharges = 43
+            maxCurrency += maxHypercharges * 5000
+            maxCurrencyAdv += maxHypercharges * 5000
+            calStatus = 200
+    except:
+        calStatus = 900
+    print(calStatus)
 
+            
+"""maxBrawlers = 80
+for i in range(maxBrawlers):
+    maxGadgets += 2
+    maxStarpower += 2
+    maxCurrency += 20245
+    maxCurrencyAdv += 20245 + 6000"""
+                
 def send_api_error(reason):
     if "accessDenied" in reason:
         return f"{emojidict['Error']} The current API key for the BS-API is outdated. Please wait for a fix."
@@ -241,7 +233,7 @@ async def on_command_error(event: CommandError):
 
 @interactions.listen()
 async def on_startup():
-    global exitcode, activity
+    global exitcode, activity, calStatus
     print("Initializing...")
     try:
         with open("quick_restart.txt","r") as f:
@@ -262,9 +254,12 @@ async def on_startup():
             await ar_refresh()
     except:
         print("Task error!")
+    calibrate()
     channel = bot.get_channel(logger)
-    if silence <= time.time():
-        await channel.send(f"{emojidict['Connected']} Bot has started/resumed.")
+    if calStatus == 200:
+        await channel.send(f"{emojidict['Connected']} Bot has started/recovered.")
+    else:
+        await channel.send(f"{emojidict['Connected']} Bot has started/recovered.\n{emojidict['Warning']} API Connection encountered issues! Status Code: {calStatus}\nUse `/resetbasedata` as soon as problems are resolved.")
     exitcode = 0
     with open("quick_restart.txt","w") as f:
         f.write(str(exitcode))
@@ -349,7 +344,7 @@ async def autosync():
         nl = "\n"
         await channel.send(f"Auto-Request completed. {'' if not errors else nl+str(errors)+'x errors encountered.'}", silent=True)
 
-@interactions.Task.create(interactions.IntervalTrigger(hours=3))
+@interactions.Task.create(interactions.IntervalTrigger(hours=1))
 async def bs_player_leaderboard():
     global bs_leaderboard_data, bs_local_leaderboard_data, bsdict
     with open("bs_data.json") as f:
@@ -494,7 +489,7 @@ async def close(ctx: interactions.SlashContext, quick_restart: bool = False):
         f.write(str(exitcode))
     await ctx.defer()
     await ctx.send("Session closing.")
-    await bot.stop()
+    sys.exit(0)
 
 @interactions.slash_command(name="tokenswitch", description="Overwrite the API-Key used to communicate with the Supercell API.", scopes=[scope])
 @interactions.slash_option(name="new_key", description="The new API key received by the developer portal", required=True, opt_type=interactions.OptionType.STRING)
@@ -529,7 +524,7 @@ async def linknames(ctx: interactions.SlashContext):
         json.dump(name_dict,f)
     await ctx.send(f"Done.",ephemeral=True)
 
-@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Only use on season switch.", scopes=[scope])
+@interactions.slash_command(name="reset_ranked_elo", description="Set EVERYONE'S saved elo under 'current' to 0. Use on season switch if the hpdevfox API is down.", scopes=[scope])
 async def reset_ranked_elo(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_powerleague.json") as f:
@@ -591,15 +586,22 @@ async def forcerefresh(ctx: interactions.SlashContext, subject: str):
     elif subject == "AR":
         await ar_refresh()
 
-@interactions.slash_command(name="reloadjson", description="Reload all .json files loaded on startup", scopes=[scope])
-async def reloadjson(ctx: interactions.SlashContext):
+@interactions.slash_command(name="resetbasedata", description="Reload all .json files and try to fetch newest info from the BS API", scopes=[scope])
+async def resetbasedata(ctx: interactions.SlashContext):
+    global bs_api_token, dsn, silence, calStatus
     await ctx.defer()
     with open("bs_api_token.json") as f:
         bs_api_token = json.load(f)["main"]
     with open("sentry_dsn.json") as f:
         dsn = json.load(f)["main"]
-    with open("verbose_silence.json") as f:
-        silence = json.load(f)["dur"]
+    try:
+        with open("verbose_silence.json") as f:
+            silence = json.load(f)["dur"]
+    except:
+        silence = 0
+        with open("verbose_silence.json","w") as f:
+            json.dump({"dur":0},f)
+    calibrate()
     await ctx.send("Done.")
 
 @interactions.slash_command(name="paginator_test", description="Testing callbacks over pages", scopes=[scope])
@@ -1469,7 +1471,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
 
 @interactions.slash_command(name="hyperchargecount", description="Set the amount of Hypercharges you own. (Requires profile-linking)")
 @interactions.slash_option(name="mode", description="Whether to set an amount or increase an already existing one", required=True, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="Set",value="set"),interactions.SlashCommandChoice(name="Increase",value="inc")])
-@interactions.slash_option(name="amount", description="Either Amount of Hypercharges you own or amount of Hypercharges to add", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=maxHypercharges)
+@interactions.slash_option(name="amount", description="Either Amount of Hypercharges you own or amount of Hypercharges to add", required=True, opt_type=interactions.OptionType.INTEGER, min_value=0)
 @interactions.slash_option(name="tagid", description="If multiple accounts are linked, index of target account. Defaults to first linked profile.", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=3)
 async def hyperchargecount(ctx: interactions.SlashContext, mode: str, amount: int, tagid: int = 1):
     await ctx.defer()
