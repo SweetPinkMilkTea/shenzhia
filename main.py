@@ -2193,14 +2193,14 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
 async def gallery(ctx: interactions.SlashContext):
     await ctx.defer(ephemeral=True)
     embeds = []
-    for i in range(4,-1,-1):
-        embed = interactions.Embed(title=["Artsgui: '0x00000'","Sebixo: 'Dual Boot'","Sebixo: 'Unexpected Exception'","VIPKiddo: 'http://'","Inji: 'Trirumvirate'","Inji: 'FTP-Share'"][i],
-                      url=["https://x.com/GuilhermeArtz","https://x.com/Sebixo3priv","https://x.com/Sebixo3priv","https://x.com/VIPKiddo29","https://x.com/Inji_arts","https://x.com/Inji_arts"][i],
+    for i in range(6,-1,-1):
+        embed = interactions.Embed(title=["Artsgui: '0x00000'","Sebixo: 'Dual Boot'","Sebixo: 'Unexpected Exception'","VIPKiddo: 'http://'","Inji: 'Trirumvirate'","Inji: 'FTP-Share'","Inji: 'Websocket-Hardreset :: 500'"][i],
+                      url=["https://x.com/GuilhermeArtz","https://x.com/Sebixo3priv","https://x.com/Sebixo3priv","https://x.com/VIPKiddo29","https://x.com/Inji_arts","https://x.com/Inji_arts","https://x.com/Inji_arts"][i],
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
-        if i not in [0,1,4]:
-            embed.set_author(name="VIEW POST",url=["","","https://x.com/Sebixo3priv/status/1800572051377541314","https://x.com/VIPKiddo29/status/1806194763181232262","","https://x.com/Inji_arts/status/1821997546018857384"][i])
-        embed.set_image(url=["https://i.imgur.com/WNS8kvk.png","https://i.imgur.com/CYoynim.png","https://pbs.twimg.com/media/GPzqvHlWkAAkMil?format=jpg&name=medium","https://pbs.twimg.com/media/GRDkj6JXIAAYg9M?format=jpg&name=900x900","https://i.imgur.com/yxQw2Is.png","https://pbs.twimg.com/media/GUkJHJtXwAA3-gF?format=jpg&name=large"][i])
+        if i not in [0,1,4,6]:
+            embed.set_author(name="VIEW POST",url=["","","https://x.com/Sebixo3priv/status/1800572051377541314","https://x.com/VIPKiddo29/status/1806194763181232262","","https://x.com/Inji_arts/status/1821997546018857384",""][i])
+        embed.set_image(url=["https://i.imgur.com/WNS8kvk.png","https://i.imgur.com/CYoynim.png","https://pbs.twimg.com/media/GPzqvHlWkAAkMil?format=jpg&name=medium","https://pbs.twimg.com/media/GRDkj6JXIAAYg9M?format=jpg&name=900x900","https://i.imgur.com/yxQw2Is.png","https://pbs.twimg.com/media/GUkJHJtXwAA3-gF?format=jpg&name=large","https://i.imgur.com/Kig9Ewj.png"][i])
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
     await pg.send(ctx)
