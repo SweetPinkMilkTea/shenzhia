@@ -1214,28 +1214,31 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             embed.add_field(name=f"{rank} | {ppscore:,} TSR (Best: {besttsr:,})",value=f"AR: {arscore}",inline=True)
         if showdownwarning:
             embed.add_field(name=f"{emojidict['Warning']} High SD/3v3 Win-Ratio",value=f"No Advanced Stats calculated.",inline=True)
-        if tag[0] in ["#8VGY00G9"]:
-            if tag[0] == "#8VGY00G9":
-                embed.add_field(name=f"{emojidict['Gold']} SHENZHIA DEVELOPER",value=f" ",inline=False)
-        elif tag[0] in bs_leaderboard_data:
-            if bs_leaderboard_data.index(tag[0])+1 < 11:
-                icon = f"{emojidict['Gold']} "
-            elif bs_leaderboard_data.index(tag[0])+1 < 51:
-                icon = f"{emojidict['Silver']} "
+        try:
+            if tag[0] in ["#8VGY00G9"]:
+                if tag[0] == "#8VGY00G9":
+                    embed.add_field(name=f"{emojidict['Gold']} SHENZHIA DEVELOPER",value=f" ",inline=False)
+            elif tag[0] in bs_leaderboard_data:
+                if bs_leaderboard_data.index(tag[0])+1 < 11:
+                    icon = f"{emojidict['Gold']} "
+                elif bs_leaderboard_data.index(tag[0])+1 < 51:
+                    icon = f"{emojidict['Silver']} "
+                else:
+                    icon = f"{emojidict['Bronze']} "
+                embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
+            elif tag[0] in bs_local_leaderboard_data[:9]:
+                if bs_local_leaderboard_data.index(tag[0])+1 == 1:
+                    icon = f"{emojidict['Gold']} "
+                elif bs_local_leaderboard_data.index(tag[0])+1 == 2:
+                    icon = f"{emojidict['Silver']} "
+                elif bs_local_leaderboard_data.index(tag[0])+1 == 3:
+                    icon = f"{emojidict['Bronze']} "
+                else:
+                    icon = ""
+                embed.add_field(name=f"{icon}#{bs_local_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
             else:
-                icon = f"{emojidict['Bronze']} "
-            embed.add_field(name=f"{icon}#{bs_leaderboard_data.index(tag[0])+1} GLOBAL PLAYER",value=f" ",inline=False)
-        elif tag[0] in bs_local_leaderboard_data[:9]:
-            if bs_local_leaderboard_data.index(tag[0])+1 == 1:
-                icon = f"{emojidict['Gold']} "
-            elif bs_local_leaderboard_data.index(tag[0])+1 == 2:
-                icon = f"{emojidict['Silver']} "
-            elif bs_local_leaderboard_data.index(tag[0])+1 == 3:
-                icon = f"{emojidict['Bronze']} "
-            else:
-                icon = ""
-            embed.add_field(name=f"{icon}#{bs_local_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
-        else:
+                embed.add_field(name=f"---",value=f" ",inline=False)
+        except:
             embed.add_field(name=f"---",value=f" ",inline=False)
         while len(pplist_b) < (12 if not extend else 18):
             pplist_b.append("-")
@@ -1356,6 +1359,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="advanced", description="Calculate with 2 Gadgets, 2 SPs and 6 Gears instead", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: bool = False):
+    if maxHypercharges == 0:
+        await ctx.send(f"{emojidict['Error']} Bad data in database. Please wait until intrenat errors have been fixed.",ephemeral=True)
     await ctx.defer()
     with open("bs_data.json") as f:
         bsdict = json.load(f)
@@ -2156,11 +2161,12 @@ async def status(ctx: interactions.SlashContext):
                 response_e = response_e["state"]
         except:
             response_e = "Not reachable"
-
+        data_ok = maxHypercharges != 0 and (not bs_leaderboard_data is None)
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
+    embed.add_field(name="Internal Data Integrity",value=f"{emojidict['Error']} [{response_d}]" if data_ok != True else f"{emojidict['Connected']} [OK]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="API-Node [Profile]",value=f"{emojidict['Error']} [{response_d}]" if response_d != 200 else f"{emojidict['Connected']} [{response_d}]",inline=True)
     embed.add_field(name="API-Node [Battle-History]",value=f"{emojidict['Error']} [{response_b}]" if response_b != 200 else f"{emojidict['Connected']} [{response_b}]",inline=True)
