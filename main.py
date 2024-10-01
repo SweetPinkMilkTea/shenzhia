@@ -1777,8 +1777,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             for i in range(3):
                 gadgetindicator = emojidict['Gadget_OK'] if extensionlist[0]["gadgets"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
                 spindicator = emojidict['SP_OK'] if extensionlist[0]["sp"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
-                gearindicator1 = emojidict['SP_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
-                gearindicator2 = emojidict['SP_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
+                gearindicator1 = emojidict['Gear_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator2 = emojidict['Gear_OK'] if extensionlist[0]["gears"][data['battle']['players'][0]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
                 embed.add_field(name=data['battle']['players'][0]['brawlers'][i]['name'],
                                 value=f"{powericonlist[data['battle']['players'][0]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][0]['brawlers'][i]['trophies']:,}]",
                                 inline=True)
@@ -1799,8 +1799,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             for i in range(3):
                 gadgetindicator = emojidict['Gadget_OK'] if extensionlist[1]["gadgets"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
                 spindicator = emojidict['SP_OK'] if extensionlist[1]["sp"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
-                gearindicator1 = emojidict['SP_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
-                gearindicator2 = emojidict['SP_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
+                gearindicator1 = emojidict['Gear_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 0 else emojidict['Slot_Empty']
+                gearindicator2 = emojidict['Gear_OK'] if extensionlist[1]["gears"][data['battle']['players'][1]['brawlers'][i]['name']] > 1 else emojidict['Slot_Empty']
                 embed.add_field(name=data['battle']['players'][1]['brawlers'][i]['name'],
                                 value=f"{powericonlist[data['battle']['players'][1]['brawlers'][i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}\n[{data['battle']['players'][1]['brawlers'][i]['trophies']:,}]",
                                 inline=True)
@@ -1906,8 +1906,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     tag_vis = "\n" + data['battle']['teams'][0][i]['tag'] if show_tags else ""
                     gadgetindicator = emojidict['Gadget_OK'] if extensionlist[i]["gadgets"] > 0 else emojidict['Slot_Empty']
                     spindicator = emojidict['SP_OK'] if extensionlist[i]["sp"] > 0 else emojidict['Slot_Empty']
-                    gearindicator1 = emojidict['SP_OK'] if extensionlist[i]["gears"] > 0 else emojidict['Slot_Empty']
-                    gearindicator2 = emojidict['SP_OK'] if extensionlist[i]["gears"] > 1 else emojidict['Slot_Empty']
+                    gearindicator1 = emojidict['Gear_OK'] if extensionlist[i]["gears"] > 0 else emojidict['Slot_Empty']
+                    gearindicator2 = emojidict['Gear_OK'] if extensionlist[i]["gears"] > 1 else emojidict['Slot_Empty']
                     if not isRankedDiv:
                         warning = emojidict['Warning']
                         embed.add_field(name=data['battle']['teams'][0][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][0][i]['tag'] else data['battle']['teams'][0][i]['name']+tag_vis,
@@ -1943,8 +1943,8 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     tag_vis = "\n" + data['battle']['teams'][1][i]['tag'] if show_tags else ""
                     gadgetindicator = emojidict['Gadget_OK'] if extensionlist[3+i]["gadgets"] > 0 else emojidict['Slot_Empty']
                     spindicator = emojidict['SP_OK'] if extensionlist[3+i]["sp"] > 0 else emojidict['Slot_Empty']
-                    gearindicator1 = emojidict['SP_OK'] if extensionlist[3+i]["gears"] > 0 else emojidict['Slot_Empty']
-                    gearindicator2 = emojidict['SP_OK'] if extensionlist[3+i]["gears"] > 1 else emojidict['Slot_Empty']
+                    gearindicator1 = emojidict['Gear_OK'] if extensionlist[3+i]["gears"] > 0 else emojidict['Slot_Empty']
+                    gearindicator2 = emojidict['Gear_OK'] if extensionlist[3+i]["gears"] > 1 else emojidict['Slot_Empty']
                     if not isRankedDiv:
                         warning = emojidict['Warning']
                         embed.add_field(name=data['battle']['teams'][1][i]['name']+f"{emojidict['Gold']}"+tag_vis if starplayertag == data['battle']['teams'][1][i]['tag'] else data['battle']['teams'][1][i]['name']+tag_vis,
