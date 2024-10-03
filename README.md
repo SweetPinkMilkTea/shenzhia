@@ -33,7 +33,7 @@ Next, check the following permissions:
 
 Invite your Bot to your server after.
 
-> [!IMPORTANT]>
+> [!IMPORTANT]
 > This server will be an "Admin-Server" with additional privileged commands. Make sure only trusted users are inside this server, or create a server just for the bot instead.
 
 ## Prerequisites
@@ -123,6 +123,9 @@ Here are all rank icons. You can use them by copying their URLs.
     - `source .venv/bin/activate` (Mac/Linux)
 - Install the requirements via `pip install -r requirements.txt`
 - Start `main.py` and follow any instructions that may occur (see next section)
+
+> [!TIP]
+> Additionally, set up something like a systemd service! With the correct configuration your bot could be automatically recovered when your bot goes down.
 
 ## First Run
 > [!WARNING]
