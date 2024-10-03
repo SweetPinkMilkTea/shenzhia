@@ -2161,12 +2161,17 @@ async def status(ctx: interactions.SlashContext):
                 response_e = response_e["state"]
         except:
             response_e = "Not reachable"
-        data_ok = (1 if maxHypercharges != 0 else 0) + (1 if (not bs_leaderboard_data is None) else 0)
+        data_ok = 0
+        if  maxHypercharges != 0:
+            data_ok += 1
+        if bs_leaderboard_data is None:
+            data_ok += 1
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
-    embed.add_field(name="Internal Data Integrity",value=f"{emojidict['Error']} [{data_ok} ISSUES]" if data_ok != 0 else f"{emojidict['Connected']} [OK]",inline=True)
+    embed.add_field(name="-----",value=" ",inline=False)
+    embed.add_field(name="Internal Data Integrity",value=f"{emojidict['Error']} [{data_ok} ISSUE(S)]" if data_ok != 0 else f"{emojidict['Connected']} [OK]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="API-Node [Profile]",value=f"{emojidict['Error']} [{response_d}]" if response_d != 200 else f"{emojidict['Connected']} [{response_d}]",inline=True)
     embed.add_field(name="API-Node [Battle-History]",value=f"{emojidict['Error']} [{response_b}]" if response_b != 200 else f"{emojidict['Connected']} [{response_b}]",inline=True)
@@ -2174,7 +2179,8 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Extension API",value=f"{emojidict['Error']} [{response_e}]" if response_e != 0 else f"{emojidict['Connected']} [{response_e}]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="Status Code Glossary",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
+    embed.add_field(name="Status Codes (Main API)",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
+    embed.add_field(name="Status Codes (Extended)",value=f"0: OK\n1: Error",inline=True)
     embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
