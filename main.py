@@ -209,6 +209,8 @@ def send_api_error(reason):
         return f"{emojidict['Error']} BS API under Maintenance. Please wait until it's over, this often only takes a few minutes."
     elif reason == "notFound":
         return f"{emojidict['Warning']} This profile doesn't exist."
+    elif reason == "ExAPIinvalid":
+        return f"{emojidict['Warning']} Extension-API down. Try again later."
     else:
         return f"{emojidict['Error']} BS API couldn't respond. Check '/status'?"
 
@@ -905,6 +907,153 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
     await pg.send(ctx)
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
+
+@interactions.slash_command(name="mastery", description="Get a player's highest mastered brawlers and an overview about their total mastery.", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
+@interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
+async def mastery(ctx: interactions.SlashContext, tag: str = ""):
+    await ctx.defer()
+    if "fuckyou" in tag.lower().replace(" ",""):
+        await ctx.send("https://i.imgur.com/6nfTFiR.png",ephemeral=True)
+        return
+    with open("bs_data.json") as f:
+        bsdict = json.load(f)
+    with open("tsr_best.json") as f:
+        tsrbest = json.load(f)
+    if tag != "":
+        if tag[0] != "#":
+            await ctx.send(f"{emojidict['Warning']} '#' missing from tag",ephemeral=True)
+            return
+    with open("bs_tags.json","r") as f:
+        tags = json.load(f)
+    try:
+        if tag == "":
+            tag = tags[str(ctx.author.id)]
+        else:
+            tag = [tag]
+    except:
+        await ctx.send(f"{emojidict['Warning']} No tag is saved to your account.\n-# Use '/profilelink' to set it.",ephemeral=True)
+        return
+    embeds = []
+    for tag_element in tag:
+        try:
+            x = bsdict[tag_element]
+        except:
+            bsdict[tag_element] = {"history":[],"updates":False}
+        url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag_element)}/"
+        url2 = f"https://api.hpdevfox.ru/profile/{tag_element.replace('#','')}"
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {bs_api_token}"
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers) as response:
+                data = await response.json()
+            del headers["Authorization"]
+            try:
+                async with session.get(url2, headers=headers,timeout=5) as response:
+                    su_data = await response.json()
+            except:
+                # 1 = Testmode ON, 0 = OFF
+                if 0:
+                    print("TESTMODE FOR MASTERY IS ON")
+                    with open("samplemasterydata.json") as f:
+                        su_data = json.load(f)
+                else:
+                    su_data = 0
+                    await ctx.send(send_api_error("ExAPIinvalid"),ephemeral=True)
+                    return
+        try:
+            print(data["reason"])
+            if bsdict[tag_element]["history"] == []:
+                del bsdict[tag_element]
+            return
+        except:
+            try:
+                if data["message"] == "API at maximum capacity, request throttled.":
+                    await ctx.send(f"{emojidict['Error']} API is overloaded.\n-# Try again later.",ephemeral=True)
+                if bsdict[tag_element]["history"] == []:
+                    del bsdict[tag_element]            
+                return
+            except:
+                pass
+
+        mastery_list = []
+        mastery_dict = {}
+        for i in su_data["response"]["Heroes"]:
+            mastery_list.append({"name":brawlerIDs[i["Character"]], "value":i["Mastery"]})
+            mastery_dict[brawlerIDs[i["Character"]]] = i["Mastery"]
+        
+        def sortForMastery(a):
+            return a["value"]
+        mastery_list.sort(reverse=True,key=sortForMastery)
+        topnames = [x['name'] for x in mastery_list]
+
+        mrlist = []
+        totalmastery = 0
+        for i in mastery_list:
+            if i['value'] > 24800:
+                score = 1000000 + (i['value']-24800)*10
+            score = 0.0000000655609077*(i['value']**3)
+            mrlist.append(score)
+            totalmastery += i['value']
+        
+        n = len(mrlist)
+        mrscore_weights = [(n - i)**2 for i in range(n)]
+        mrscore_weights = [weight / sum(mrscore_weights) for weight in mrscore_weights]
+        for i in range(len(mrlist)):
+            #print(f"[{mrlist[i]}] * [{mrscore_weights[i]}] --> [{mrlist[i] * mrscore_weights[i]}]")
+            mrlist[i] = mrlist[i] * mrscore_weights[i]
+
+        embed = interactions.Embed(title=f"{data['name']} ({tag_element})",
+                        color=0x6f07b4,
+                        timestamp=datetime.datetime.now())
+        
+        embed.add_field(name=f"{'-'} | {int(sum(mrlist)):,} MR",value=f"Total flat Points: {totalmastery:,}\nLinear Portion: {round((totalmastery/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
+        masterydescription = "CASUAL (I)"
+        if mastery_list[0]['value'] > 24799*0.5:
+            masterydescription = "ENTHUSIAST (II)"
+        if mastery_list[0]['value'] > 24799:
+            masterydescription = "FAN (III)"
+        if mastery_list[0]['value'] > 24799*1.5:
+            masterydescription = "LOYALIST (IV)"
+        if mastery_list[0]['value'] > 24799*2:
+            masterydescription = "DEVOTEE (V)"
+        if mastery_list[0]['value'] > 24799*2.5:
+            masterydescription = "OBSESSOR (VI)"
+        embed.add_field(name=f"{mastery_list[0]['name'].upper()} {masterydescription}",value=f" ",inline=True)
+        
+        embed.add_field(name=f"---",value=f" ",inline=False)
+        for i in range(9):
+            try:
+                try:
+                    masterypoints = mastery_dict[topnames[i]]
+                except:
+                    masterypoints = 0
+                m_index = 0
+                for j in [300,800,1500,2600,4000,5800,10300,16800,24800]:
+                    if masterypoints >= j:
+                        m_index += 1
+                    else:
+                        break
+                if m_index not in [0,9]:
+                    multiplier = m_index%3 if m_index%3 != 0 else 3
+                    mastery_display = f"{[emojidict['Bronze'],emojidict['Silver'],emojidict['Gold']][(m_index-1)//3]}" * multiplier
+                elif m_index == 9:
+                    mastery_display = f"{emojidict['Gold']*3}"
+                else:
+                    mastery_display = f"---"
+                embed.add_field(name=f"[#{i+1}] {topnames[i]}",value=f"[{mastery_display}] {masterypoints:,}",inline=True)
+            except Exception as e:
+                embed.add_field(name=f"[#-] ---",value=f"[---] 0",inline=True)
+                print(f"{e} : {str(e)}")
+        if str(ctx.author_id) not in tags:
+            embed.add_field(name=f"{emojidict['Info']}", value="Is this profile yours? Link it with /profilelink to get more utility!")
+        embeds.append(embed)
+    if len(embeds) == 1 and not str(ctx.author_id) in tags:
+        await ctx.send(embed=embed)
+    else:
+        pg = Paginator.create_from_embeds(bot, *embeds)
+        await pg.send(ctx)
 
 @interactions.slash_command(name="performance", description="Get a player's performance report, containing Trophy/Ranked info and TSR - a custom skill metric.", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
