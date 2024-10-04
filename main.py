@@ -2161,17 +2161,21 @@ async def status(ctx: interactions.SlashContext):
                 response_e = response_e["state"]
         except:
             response_e = "Not reachable"
-        data_ok = 0
-        if  maxHypercharges != 0:
-            data_ok += 1
-        if bs_leaderboard_data is None:
-            data_ok += 1
+    data_issues = 0
+    if  maxHypercharges == 0:
+        data_issues += 1
+        print("Base Progression data incorrect.")
+    try:
+        bs_leaderboard_data is None
+    except:
+        data_issues += 1
+        print("No Leaderboard Data")
     embed = interactions.Embed(title="STATUS + DIAGNOSTICS",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
     embed.add_field(name="Uptime",value=f"Started <t:{startuptime}:R>",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
-    embed.add_field(name="Internal Data Integrity",value=f"{emojidict['Error']} [{data_ok} ISSUE(S)]" if data_ok != 0 else f"{emojidict['Connected']} [OK]",inline=True)
+    embed.add_field(name="Internal Data Integrity",value=f"{emojidict['Error']} [{data_issues} ISSUE(S)]" if data_issues != 0 else f"{emojidict['Connected']} [OK]",inline=True)
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="API-Node [Profile]",value=f"{emojidict['Error']} [{response_d}]" if response_d != 200 else f"{emojidict['Connected']} [{response_d}]",inline=True)
     embed.add_field(name="API-Node [Battle-History]",value=f"{emojidict['Error']} [{response_b}]" if response_b != 200 else f"{emojidict['Connected']} [{response_b}]",inline=True)
