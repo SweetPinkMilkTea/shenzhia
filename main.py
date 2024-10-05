@@ -210,7 +210,9 @@ def send_api_error(reason):
     elif reason == "notFound":
         return f"{emojidict['Warning']} This profile doesn't exist."
     elif reason == "ExAPIinvalid":
-        return f"{emojidict['Warning']} Extension-API down. Try again later."
+        return f"{emojidict['Warning']} Extension-API down or unresponsive.\n-# Try again later or use `wait_longer`."
+    elif reason == "ExAPIinvalidResponse":
+        return f"{emojidict['Warning']} Extension-API gave an invalid response.\n-# Try again."
     else:
         return f"{emojidict['Error']} BS API couldn't respond. Check '/status'?"
 
@@ -957,6 +959,9 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                 else:
                     async with session.get(url2, headers=headers) as response:
                         su_data = await response.json()
+                su_data["response"]
+            except TypeError:
+                await ctx.send(send_api_error("ExAPIinvalidResponse"),ephemeral=True)
             except:
                 # 1 = Testmode ON, 0 = OFF
                 if 0:
