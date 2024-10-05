@@ -1015,15 +1015,15 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         
         embed.add_field(name=f"{'-'} | {int(sum(mrlist)):,} MR",value=f"Total flat Points: {totalmastery:,}\nLinear Portion: {round((totalmastery/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
         masterydescription = "CASUAL (I)"
-        if mastery_list[0]['value'] > 24799*0.5:
-            masterydescription = "ENTHUSIAST (II)"
         if mastery_list[0]['value'] > 24799:
-            masterydescription = "FAN (III)"
+            masterydescription = "ENTHUSIAST (II)"
         if mastery_list[0]['value'] > 24799*1.5:
-            masterydescription = "LOYALIST (IV)"
+            masterydescription = "FAN (III)"
         if mastery_list[0]['value'] > 24799*2:
+            masterydescription = "LOYALIST (IV)"
+        if mastery_list[0]['value'] > 24799*3:
             masterydescription = "DEVOTEE (V)"
-        if mastery_list[0]['value'] > 24799*2.5:
+        if mastery_list[0]['value'] > 24799*5:
             masterydescription = "OBSESSOR (VI)"
         embed.add_field(name=f"{mastery_list[0]['name'].upper()} {masterydescription}",value=f" ",inline=True)
         
