@@ -1020,7 +1020,18 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
         
-        embed.add_field(name=f"{'-'} | {int(sum(mrlist)):,} MR",value=f"Total flat Points: {totalmastery:,}\nLinear Portion: {round((totalmastery/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
+        score = int(sum(mrlist))
+        rank = emojidict['RankNone']
+        rlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
+        index2 = 0
+        for i in tsr_rank_thresholds:
+            if score < i:
+                break
+            else:
+                rank = rlist[index2]
+                index2 += 1
+
+        embed.add_field(name=f"{rank} | {score:,} MR",value=f"Total Points: {totalmastery:,}\nFull Progression: {round((totalmastery/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
         masterydescription = "CASUAL (I)"
         if mastery_list[0]['value'] > 24799:
             masterydescription = "ENTHUSIAST (II)"
