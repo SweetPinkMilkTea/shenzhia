@@ -908,9 +908,10 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
     with open("bs_data.json","w") as f:
         json.dump(bsdict,f)
 
-@interactions.slash_command(name="mastery", description="Get a player's highest mastered brawlers and an overview about their total mastery.", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
+@interactions.slash_command(name="mastery", description="Get a player's highest mastered brawlers and an overview about their total mastery.", integration_types=[interactions.IntegrationType.GUILD_INSTALL])
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
-async def mastery(ctx: interactions.SlashContext, tag: str = ""):
+@interactions.slash_option(name="wait_longer", description="If enabled, the bot will try to get a response from the API for as long as possible.", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bool = False):
     await ctx.defer()
     if "fuckyou" in tag.lower().replace(" ",""):
         await ctx.send("https://i.imgur.com/6nfTFiR.png",ephemeral=True)
@@ -950,8 +951,12 @@ async def mastery(ctx: interactions.SlashContext, tag: str = ""):
                 data = await response.json()
             del headers["Authorization"]
             try:
-                async with session.get(url2, headers=headers,timeout=5) as response:
-                    su_data = await response.json()
+                if not wait_longer:
+                    async with session.get(url2, headers=headers,timeout=10) as response:
+                        su_data = await response.json()
+                else:
+                    async with session.get(url2, headers=headers) as response:
+                        su_data = await response.json()
             except:
                 # 1 = Testmode ON, 0 = OFF
                 if 0:
@@ -1098,7 +1103,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 data = await response.json()
             del headers["Authorization"]
             try:
-                async with session.get(url2, headers=headers,timeout=5) as response:
+                async with session.get(url2, headers=headers,timeout=10) as response:
                     su_data = await response.json()
             except:
                 su_data = 0
@@ -2305,7 +2310,7 @@ async def status(ctx: interactions.SlashContext):
         except:
             response_c = "Not reachable"
         try:
-            async with session.get(url_d, headers=headers, timeout=5) as response:
+            async with session.get(url_d, headers=headers, timeout=10) as response:
                 response_e = await response.json()
                 response_e = response_e["state"]
         except:
