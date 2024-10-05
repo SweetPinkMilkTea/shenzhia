@@ -998,7 +998,8 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         for i in mastery_list:
             if i['value'] > 24800:
                 score = 1000000 + (i['value']-24800)*10
-            score = 0.0000000655609077*(i['value']**3)
+            else:
+                score = 0.0000000655609077*(i['value']**3)
             mrlist.append(score)
             totalmastery += i['value']
         
@@ -1006,7 +1007,8 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         mrscore_weights = [(n - i)**2 for i in range(n)]
         mrscore_weights = [weight / sum(mrscore_weights) for weight in mrscore_weights]
         for i in range(len(mrlist)):
-            #print(f"[{mrlist[i]}] * [{mrscore_weights[i]}] --> [{mrlist[i] * mrscore_weights[i]}]")
+            # DEBUG: Score Printing
+            #print(f"[{mastery_list[i]['value']}] :: [{mrlist[i]}] * [{mrscore_weights[i]}] --> [{mrlist[i] * mrscore_weights[i]}]")
             mrlist[i] = mrlist[i] * mrscore_weights[i]
 
         embed = interactions.Embed(title=f"{data['name']} ({tag_element})",
@@ -1028,7 +1030,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         embed.add_field(name=f"{mastery_list[0]['name'].upper()} {masterydescription}",value=f" ",inline=True)
         
         embed.add_field(name=f"---",value=f" ",inline=False)
-        for i in range(9):
+        for i in range(18):
             try:
                 try:
                     masterypoints = mastery_dict[topnames[i]]
