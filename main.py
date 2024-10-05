@@ -997,7 +997,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         totalmastery = 0
         for i in mastery_list:
             if i['value'] > 24800:
-                score = 1000000 + (i['value']-24800)*10
+                score = 1000000 + (i['value']-24800)*0.1
             else:
                 score = 0.0000000655609077*(i['value']**3)
             mrlist.append(score)
