@@ -1046,7 +1046,8 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         embed.add_field(name=f"{mastery_list[0]['name'].upper()} {masterydescription}",value=f" ",inline=True)
         
         embed.add_field(name=f"---",value=f" ",inline=False)
-        for i in range(18):
+        mdict = {}
+        for i in range(len(topnames)):
             try:
                 try:
                     masterypoints = mastery_dict[topnames[i]]
@@ -1058,17 +1059,29 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                         m_index += 1
                     else:
                         break
-                if m_index not in [0,9]:
-                    multiplier = m_index%3 if m_index%3 != 0 else 3
-                    mastery_display = f"{[emojidict['Bronze'],emojidict['Silver'],emojidict['Gold']][(m_index-1)//3]}" * multiplier
-                elif m_index == 9:
-                    mastery_display = f"{emojidict['Gold']*3}"
-                else:
-                    mastery_display = f"---"
-                embed.add_field(name=f"[#{i+1}] {topnames[i]}",value=f"[{mastery_display}] {masterypoints:,}",inline=True)
+                try:
+                    mdict[str(m_index)] += 1
+                except:
+                    mdict[str(m_index)] = 1
+                if i < 12:
+                    if m_index not in [0,9]:
+                        multiplier = m_index%3 if m_index%3 != 0 else 3
+                        mastery_display = f"{[emojidict['Bronze'],emojidict['Silver'],emojidict['Gold']][(m_index-1)//3]}" * multiplier
+                    elif m_index == 9:
+                        mastery_display = f"{emojidict['Gold']*3}"
+                    else:
+                        mastery_display = f"---"
+                    embed.add_field(name=f"[#{i+1}] {topnames[i]}",value=f"[{mastery_display}] {masterypoints:,}",inline=True)
             except Exception as e:
                 embed.add_field(name=f"[#-] ---",value=f"[---] 0",inline=True)
                 print(f"{e} : {str(e)}")
+        
+        embed.add_field(name=f"---",value=f" ",inline=False)
+        
+        embed.add_field(name=f"TOTALS",value=f"{emojidict['Bronze']*1} x{mdict.get('1',0)}\n{emojidict['Bronze']*2} x{mdict.get('2',0)}\n{emojidict['Bronze']*3} x{mdict.get('3',0)}",inline=True)
+        embed.add_field(name=f"-",value=f"{emojidict['Silver']*1} x{mdict.get('4',0)}\n{emojidict['Silver']*2} x{mdict.get('5',0)}\n{emojidict['Silver']*3} x{mdict.get('6',0)}",inline=True)
+        embed.add_field(name=f"-",value=f"{emojidict['Gold']*1} x{mdict.get('7',0)}\n{emojidict['Gold']*2} x{mdict.get('8',0)}\n{emojidict['Gold']*3} x{mdict.get('9',0)}",inline=True)
+
         if str(ctx.author_id) not in tags:
             embed.add_field(name=f"{emojidict['Info']}", value="Is this profile yours? Link it with /profilelink to get more utility!")
         embeds.append(embed)
