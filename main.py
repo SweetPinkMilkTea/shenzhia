@@ -25,6 +25,8 @@ from matplotlib import font_manager
 import matplotlib as mpl
 import numpy as np
 
+import openai
+
 fm = mpl.font_manager
 fm._get_fontconfig_fonts.cache_clear()
 
@@ -39,7 +41,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = ["symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
+req_files = ["gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -71,6 +73,11 @@ if not all(x in os.listdir() for x in req_files):
         a = "main"
         b = input("Key: ")
         json.dump({a:b},f)
+    with open("openai_key.json","w") as f:
+        print(f"\nOpenAI API Key\nLeave blank to skip\n---")
+        a = "main"
+        b = input("Key: ")
+        json.dump({"main":b},f)
     with open("dev_env.json","w") as f:
         print(f"\nChannel for logging purposes\nChange this by modifying 'dev_env.json'\n---")
         a = "loggingchannel"
@@ -109,6 +116,12 @@ with open("dc_bot_tokens.json") as f:
     discord_bot_token = json.load(f)
 with open("sentry_dsn.json") as f:
     dsn = json.load(f)["main"]
+with open("openai_key.json") as f:
+    gptkey = json.load(f)["main"]
+    if gptkey != "":
+        client = openai.OpenAI(api_key=gptkey)
+with open("gpt_usage.json") as f:
+    gpt_usage = json.load(f)
 with open("verbose_silence.json") as f:
     try:
         silence = json.load(f)["dur"]
@@ -2376,6 +2389,86 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
     else:
         output = f"{emojidict['Error']} Access to imgur-API was denied."
     await ctx.send(output,ephemeral=hidden)
+
+@interactions.slash_command(name="gpt", sub_cmd_description="Get info on how much you can prompt.", sub_cmd_name="status")
+async def gpt_status(ctx: interactions.SlashContext):
+    global gpt_usage
+    if gptkey == "":
+        await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
+    try:
+        tokenCurrency = gpt_usage[str(ctx.author)]
+    except:
+        gpt_usage[str(ctx.author)] = 100000
+        tokenCurrency = gpt_usage[str(ctx.author)]
+    await ctx.send(f"You have {tokenCurrency} tokens left to use.\n(750 words are about 1k tokens)\n\nTokens are refilled occasionally.")
+
+@interactions.slash_command(name="gpt", sub_cmd_description="Prompt ChatGPT. Have fun.", sub_cmd_name="prompt")
+@interactions.slash_option(name="content", description="Your prompt.", required=True, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="model", description="Select what model to use. Defaults to 'gpt-3.5-turbo'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT 3.5 Turbo",value="gpt-3.5-turbo"),interactions.SlashCommandChoice(name="GPT 4",value="inc")])
+@interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
+async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-3.5-turbo", temperature: int = 0):
+    global gpt_usage
+    if gptkey == "":
+        await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
+    try:
+        tokenCurrency = gpt_usage[str(ctx.author)]
+    except:
+        gpt_usage[str(ctx.author)] = 999999
+        tokenCurrency = gpt_usage[str(ctx.author)]
+    if tokenCurrency < 1:
+        await ctx.send(f"{emojidict['Warning']} You reached your usage limit.")
+        return
+    premium = False
+    if model != "gpt-3.5-turbo":
+        """
+        if str(ctx.author) not in whitelist:
+            await ctx.send(f"{emojidict['Warning']} You are not whitelisted for usage of non GPT 3.5 Turbo.")
+        """
+        premium = True
+
+    prompt = content
+    if len(prompt) < 5:
+        await ctx.send(f"{emojidict['Warning']} Your prompt is too short.")
+        return
+    messages = [{"role": "user", "content": prompt}]
+    try:
+        response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_completion_tokens=1024)
+    except Exception as error:
+        await ctx.send(f"{emojidict['Error']} Request failed:\n```{error}```")
+        return
+    output = response.choices[0].message.content
+    if "@everyone" in output or "@here" in output or "<@" in output:
+        export = True
+    if premium == True:
+        tokenCurrency -= int(response.usage.total_tokens)*10
+    else:
+        tokenCurrency -= int(response.usage.total_tokens)
+    if tokenCurrency < 0:
+        tokenCurrency = 0
+    gpt_usage[str(ctx.author)] = tokenCurrency
+    with open("gpt_usage.json","w") as f:
+        json.dump(gpt_usage,f)
+    appendstr = ""
+    if tokenCurrency < 3000:
+        appendstr = f"{emojidict['Warning']} **Approaching usage limit.**"
+    if tokenCurrency == 0:
+        appendstr = f"{emojidict['Warning']} **Usage limit reached!**"
+    try:
+        if export == True:
+            raise Exception()
+        if appendstr == "":
+            await ctx.send(output)
+        else:
+            await ctx.send(appendstr+"\n\n"+output)
+    except:
+        with open("gpt_result.txt", "w") as f:
+            f.write(output)
+        with open("gpt_result.txt", "rb") as file:
+            if appendstr == "":
+                await ctx.send(file=interactions.File(file, "gpt_result.txt"))
+            else:
+                await ctx.send(f"{appendstr}",file=interactions.File(file, "gpt_result.txt"))
 
 @interactions.slash_command(name="gallery", description="View art of Shenzhia.")
 async def gallery(ctx: interactions.SlashContext):
