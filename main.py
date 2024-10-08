@@ -1000,6 +1000,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
 
         mrlist = []
         totalmastery = 0
+        totalmastery_sub = 0
         for i in mastery_list:
             if i['value'] > 24800:
                 score = 1000000 + (i['value']-24800)*0.1
@@ -1007,6 +1008,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                 score = 0.0000000655609077*(i['value']**3)
             mrlist.append(score)
             totalmastery += i['value']
+            totalmastery_sub += i['value'] if i['value'] <= 24800 else 24800
         
         n = len(mrlist)
         mrscore_weights = [(n - i)**2 for i in range(n)]
@@ -1031,7 +1033,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                 rank = rlist[index2]
                 index2 += 1
 
-        embed.add_field(name=f"{rank} | {score:,} MR",value=f"Total Points: {totalmastery:,}\nFull Progression: {round((totalmastery/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
+        embed.add_field(name=f"{rank} | {score:,} MR",value=f"Total Points: {totalmastery:,} ({totalmastery_sub:,})\nFull Progression: {round((totalmastery_sub/(maxBrawlers*24800))*100,2)}% of {maxBrawlers*24800:,}",inline=True)
         masterydescription = "CASUAL (I)"
         if mastery_list[0]['value'] > 24799:
             masterydescription = "ENTHUSIAST (II)"
