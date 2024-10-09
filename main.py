@@ -1547,7 +1547,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
 @interactions.slash_option(name="advanced", description="Calculate with 2 Gadgets, 2 SPs and 6 Gears instead", required=False, opt_type=interactions.OptionType.BOOLEAN)
 async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: bool = False):
     if maxHypercharges == 0:
-        await ctx.send(f"{emojidict['Error']} Bad data in database. Please wait until intrenat errors have been fixed.",ephemeral=True)
+        await ctx.send(f"{emojidict['Error']} Bad data in database. Please wait until internal errors have been fixed.",ephemeral=True)
     await ctx.defer()
     with open("bs_data.json") as f:
         bsdict = json.load(f)
