@@ -2396,10 +2396,10 @@ async def gpt_status(ctx: interactions.SlashContext):
     if gptkey == "":
         await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
     try:
-        tokenCurrency = gpt_usage[str(ctx.author)]
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
     except:
-        gpt_usage[str(ctx.author)] = 100000
-        tokenCurrency = gpt_usage[str(ctx.author)]
+        gpt_usage[str(ctx.author_id)] = 100000
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
     await ctx.send(f"You have **{tokenCurrency}** tokens left to use.\n\n-# Tips:\n-# - 750 words are about 1k tokens.\n-# - Using GPT-o1 mini adds a x20 multiplier to token deduction.\n-# - Tokens are refilled manually. Ask bot administrators for refills.")
 
 @interactions.slash_command(name="gpt", sub_cmd_description="Prompt ChatGPT. Have fun.", sub_cmd_name="prompt")
@@ -2412,17 +2412,17 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     if gptkey == "":
         await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
     try:
-        tokenCurrency = gpt_usage[str(ctx.author)]
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
     except:
-        gpt_usage[str(ctx.author)] = 999999
-        tokenCurrency = gpt_usage[str(ctx.author)]
+        gpt_usage[str(ctx.author_id)] = 100000
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
     if tokenCurrency < 1:
         await ctx.send(f"{emojidict['Warning']} You reached your usage limit.")
         return
     premium = False
     if model != "gpt-3.5-turbo":
         """
-        if str(ctx.author) not in whitelist:
+        if str(ctx.author_id) not in whitelist:
             await ctx.send(f"{emojidict['Warning']} You are not whitelisted for usage of non GPT 3.5 Turbo.")
         """
         premium = True
@@ -2446,7 +2446,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
         tokenCurrency -= int(response.usage.total_tokens)
     if tokenCurrency < 0:
         tokenCurrency = 0
-    gpt_usage[str(ctx.author)] = tokenCurrency
+    gpt_usage[str(ctx.author_id)] = tokenCurrency
     with open("gpt_usage.json","w") as f:
         json.dump(gpt_usage,f)
     appendstr = ""
