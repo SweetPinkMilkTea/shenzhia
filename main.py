@@ -636,9 +636,10 @@ def test():
 
 @interactions.slash_command(name="set_gpt_usage", description="Set how many tokens a specified user has left. (-1: Infinite)", scopes=[scope])
 @interactions.slash_option(name="user", description="Target user (as ID)", required=True, opt_type=interactions.OptionType.STRING)
-@interactions.slash_option(name="amount", description="Tokens imposed on user. -1 stands for no limit.", required=True, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="amount", description="Tokens imposed on user. -1 stands for no limit.", required=True, opt_type=interactions.OptionType.INTEGER, min_value=-1)
 async def set_gpt_usage(ctx: interactions.SlashContext, user: str, amount: int):
-    gpt_usage[str(ctx.author_id)] = 100000
+    global gpt_usage
+    gpt_usage[user] = amount
     with open("gpt_usage.json","w") as f:
         json.dump(gpt_usage,f)
     await ctx.send("Applied.")
@@ -2415,7 +2416,7 @@ async def gpt_status(ctx: interactions.SlashContext):
 @interactions.slash_command(name="gpt", sub_cmd_description="Prompt ChatGPT. Have fun.", sub_cmd_name="prompt")
 @interactions.slash_option(name="content", description="Your prompt.", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
-@interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT 3.5 Turbo",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT o1 mini",value="o1-mini")])
+@interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT-4o Mini",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT-o1 mini",value="o1-mini")])
 @interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
 async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0):
     global gpt_usage
