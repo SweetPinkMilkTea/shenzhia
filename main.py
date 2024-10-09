@@ -2410,14 +2410,14 @@ async def gpt_status(ctx: interactions.SlashContext):
     except:
         gpt_usage[str(ctx.author_id)] = 100000
         tokenCurrency = gpt_usage[str(ctx.author_id)]
-    await ctx.send(f"You have **{tokenCurrency}** tokens left to use.\n\n-# Tips:\n-# - 750 words are about 1k tokens.\n-# - Using GPT-o1 mini adds a x20 multiplier to token deduction.\n-# - Tokens are refilled manually. Ask bot administrators for refills.")
+    await ctx.send(f"You have **{tokenCurrency if tokenCurrency != -1 else '∞'}** tokens left to use.\n\n-# Tips:\n-# - 750 words are about 1k tokens.\n-# - Using GPT-o1 mini adds a x20 multiplier to token deduction.\n-# - Tokens are refilled manually. Ask bot administrators for refills.")
 
 @interactions.slash_command(name="gpt", sub_cmd_description="Prompt ChatGPT. Have fun.", sub_cmd_name="prompt")
 @interactions.slash_option(name="content", description="Your prompt.", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT 3.5 Turbo",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT o1 mini",value="o1-mini")])
 @interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
-async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-3.5-turbo", temperature: int = 0):
+async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0):
     global gpt_usage
     await ctx.defer()
     if gptkey == "":
@@ -2427,7 +2427,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     except:
         gpt_usage[str(ctx.author_id)] = 100000
         tokenCurrency = gpt_usage[str(ctx.author_id)]
-    if tokenCurrency < 1:
+    if tokenCurrency == 0:
         await ctx.send(f"{emojidict['Warning']} You reached your usage limit.")
         return
     premium = False
@@ -2451,12 +2451,17 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     output = response.choices[0].message.content
     if "@everyone" in output or "@here" in output or "<@" in output:
         export = True
-    if premium == True:
-        tokenCurrency -= int(response.usage.total_tokens)*10
-    else:
-        tokenCurrency -= int(response.usage.total_tokens)
-    if tokenCurrency < 0:
-        tokenCurrency = 0
+    if tokenCurrency != -1:
+        if premium == True:
+            if int(response.usage.total_tokens)*10 <= tokenCurrency:
+                tokenCurrency -= int(response.usage.total_tokens)*10
+            else:
+                tokenCurrency == 0
+        else:
+            if int(response.usage.total_tokens) <= tokenCurrency:
+                tokenCurrency -= int(response.usage.total_tokens)
+            else:
+                tokenCurrency == 0
     gpt_usage[str(ctx.author_id)] = tokenCurrency
     with open("gpt_usage.json","w") as f:
         json.dump(gpt_usage,f)
