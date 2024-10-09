@@ -618,6 +618,10 @@ async def resetbasedata(ctx: interactions.SlashContext):
         silence = 0
         with open("verbose_silence.json","w") as f:
             json.dump({"dur":0},f)
+    with open("openai_key.json") as f:
+        gptkey = json.load(f)["main"]
+        if gptkey != "":
+            client = openai.OpenAI(api_key=gptkey)
     calibrate()
     await ctx.send("Done.")
 
@@ -2467,7 +2471,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     with open("gpt_usage.json","w") as f:
         json.dump(gpt_usage,f)
     appendstr = ""
-    if tokenCurrency < 3000:
+    if tokenCurrency < 3000 and tokenCurrency != -1:
         appendstr = f"{emojidict['Warning']} **Approaching usage limit.**"
     if tokenCurrency == 0:
         appendstr = f"{emojidict['Warning']} **Usage limit reached!**"
