@@ -634,6 +634,16 @@ async def paginatortest(ctx: interactions.SlashContext):
 def test():
     print("!!!")
 
+@interactions.slash_command(name="set_gpt_usage", description="Set how many tokens a specified user has left. (-1: Infinite)", scopes=[scope])
+@interactions.slash_option(name="user", description="Target user (as ID)", required=True, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="amount", description="Tokens imposed on user. -1 stands for no limit.", required=True, opt_type=interactions.OptionType.STRING)
+async def set_gpt_usage(ctx: interactions.SlashContext, user: str, amount: int):
+    gpt_usage[str(ctx.author_id)] = 100000
+    with open("gpt_usage.json","w") as f:
+        json.dump(gpt_usage,f)
+    await ctx.send("Applied.")
+
+
 #---------------------------
 # GLOBAL COMMANDS BELOW
 #---------------------------
@@ -2409,6 +2419,7 @@ async def gpt_status(ctx: interactions.SlashContext):
 @interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
 async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-3.5-turbo", temperature: int = 0):
     global gpt_usage
+    await ctx.defer()
     if gptkey == "":
         await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
     try:
