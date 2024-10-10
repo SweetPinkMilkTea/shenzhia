@@ -901,7 +901,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
                         timestamp=datetime.datetime.now())
 
         embed.add_field(name=f"{emojidict['Trophy']}",value=f"{totaltrophies:,} \u27A1 {totaltrophies-deduction:,} (-{deduction})",inline=False)
-        embed.add_field(name={emojidict['Bling']},value="+"+str(bling),inline=False)
+        embed.add_field(name=f"{emojidict['Bling']}",value="+"+str(bling),inline=False)
         embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
