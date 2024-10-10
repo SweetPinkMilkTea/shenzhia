@@ -41,7 +41,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = ["gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
+req_files = sorted(["gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -2422,7 +2422,8 @@ async def gpt_status(ctx: interactions.SlashContext):
 @interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT-4o Mini",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT-o1 mini",value="o1-mini")])
 @interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
-async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0):
+@interactions.slash_option(name="chain", description="Whether to continue with a conversation. (Expensive on tokens)", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0, chain: bool = False):
     global gpt_usage
     await ctx.defer()
     if gptkey == "":
@@ -2447,13 +2448,30 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     if len(prompt) < 5:
         await ctx.send(f"{emojidict['Warning']} Your prompt is too short.")
         return
-    messages = [{"role": "user", "content": prompt}]
+    message_template = [{"role": "system", "content": "You are Shenzhia, a helpful (female) assistant that relays prompts to ChatGPT. When you receive a prompt that ChatGPT cannot respond to or refuses to engage with, you will relay the prompt and indicate that ChatGPT is unable to assist. Your responses should reflect that you are simply passing on the message."}]
+    if chain:
+        with open("gpt_chains.json") as f:  
+            try: 
+                conv_messages = json.load(f)[str(ctx.author_id)]
+                messages = conv_messages
+            except Exception as e:
+                print(e)
+                messages = message_template
+    else:
+        messages = message_template
+    messages.append({"role": "user", "content": prompt})
     try:
         response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_tokens=1024)
     except Exception as error:
         await ctx.send(f"{emojidict['Error']} Request failed:\n```{error}```")
         return
     output = response.choices[0].message.content
+    messages.append({"role": "assistant", "content": output})
+    with open("gpt_chains.json") as f:
+        conversationData = json.load(f)
+    conversationData[ctx.author_id] = messages
+    with open("gpt_chains.json", "w") as f:
+        json.dump(conversationData,f)
     if "@everyone" in output or "@here" in output or "<@" in output:
         export = True
     if tokenCurrency != -1:
@@ -2471,6 +2489,8 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     with open("gpt_usage.json","w") as f:
         json.dump(gpt_usage,f)
     appendstr = ""
+    if len([x for x in messages if x['role'] == 'user']) > 1:
+        appendstr = f"{emojidict['Info']} Conversation-Chain: {len([x for x in messages if x['role'] == 'user'])}"
     if tokenCurrency < 3000 and tokenCurrency != -1:
         appendstr = f"{emojidict['Warning']} **Approaching usage limit.**"
     if tokenCurrency == 0:
