@@ -2436,10 +2436,13 @@ async def gpt_status(ctx: interactions.SlashContext):
 @interactions.slash_option(name="content", description="Your prompt.", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT-4o Mini",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT-o1 mini",value="o1-mini")])
-@interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
+@interactions.slash_option(name="temperature", description="Value of Focus. High values (≥ 80) are more random. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=200)
 @interactions.slash_option(name="chain", description="Whether to continue with a conversation. (Expensive on tokens)", required=False, opt_type=interactions.OptionType.BOOLEAN)
-async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0, chain: bool = False):
+@interactions.slash_option(name="cap", description="Puts a cap of 1024 on how much tokens are used. Automatically disables on enabled chains.", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0, chain: bool = False, cap: bool = True):
     global gpt_usage
+    if chain:
+        cap = False
     await ctx.defer()
     if gptkey == "":
         await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
@@ -2476,7 +2479,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
         messages = message_template
     messages.append({"role": "user", "content": prompt})
     try:
-        response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_tokens=1024)
+        response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_tokens=1024 if cap else None)
     except Exception as error:
         await ctx.send(f"{emojidict['Error']} Request failed:\n```{error}```")
         return
