@@ -2481,7 +2481,11 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     try:
         response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_tokens=1024 if cap else None)
     except Exception as error:
-        await ctx.send(f"{emojidict['Error']} Request failed:\n```{error}```")
+        if hasattr(error, 'response') and error.response is not None:
+            error = error.response.json()
+            await ctx.send(f"{emojidict['Error']} Request has failed:\n{error['error']['type']} : {error['error']['code']}")
+        else:
+            await ctx.send(f"{emojidict['Error']} Request has failed.")
         return
     output = response.choices[0].message.content
     messages.append({"role": "assistant", "content": output})
