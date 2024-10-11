@@ -2,11 +2,11 @@
 > Searching for bot usage documentation? Find information on using the bot on the wiki section of the repo.
 
 > [!CAUTION]
-> This bot is unfinished and in active development. Anything might be broken and be changed without notice.
+> This bot is in active development. Anything might be changed without notice.
 > 
 > This bot has not been tested against large numbers of users/servers. Be aware that performance problems might arise under such circumstances.
->
-> *I am by no means an experienced developer. I'm always open for suggestions and feedback, provided it's constructive and remains civil.*
+> 
+> Create Issues for ideas for Improvement or when something is not working.
 
 # About
 This is Shenzhia, a python discord bot.
@@ -55,6 +55,8 @@ Shenzhia needs additional resources outside of python related to you. These cons
 
 > [!WARNING]
 > You can use the bot without Sentry's service, this however requires editing Shenzhia's code.
+
+- An OpenAI API Key for using the `/gpt` command. You may skip this if you don't intent on using the feature or have no way of obtaining a key.
 
 ### Custom Emojis
 Custom Emojis are an integral part of Shenzhia by visualizing a lot of data in a more digestible format than simply dumping text everywhere.
@@ -134,6 +136,8 @@ Here are all rank icons. You can use them by copying their URLs.
 
 Upon running `main.py` for the first time, you will be asked of all the information listed in the prerequisites section.
 
+If you do not posess an OpenAI API Key, skip the prompt by simple entering nothing.
+
 You can assign a name to your Discord bot token.
 When starting the bot after the setup has concluded, you can save multiple bot tokens to switch between them (for example when testing while a stable version is already running).
 
@@ -142,3 +146,6 @@ You will also be asked for a logging channel and an "Admin-Server". Paste their 
 Finally, set all needed Emojis.
 
 After entering everything, your first-run-setup is done!
+
+> [!TIP]
+> To start off optimally, use the Wiki Section of this repo to learn all commands that Shenzhia has to offer.
