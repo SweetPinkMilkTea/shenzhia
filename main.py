@@ -2463,7 +2463,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
     if len(prompt) < 5:
         await ctx.send(f"{emojidict['Warning']} Your prompt is too short.")
         return
-    message_template = [{"role": "system", "content": "You are Shenzhia, a helpful (female) assistant that relays prompts to ChatGPT. When you receive a prompt that ChatGPT cannot respond to or refuses to engage with, you will relay the prompt and indicate that ChatGPT is unable to assist. Your responses should reflect that you are simply passing on the message."}]
+    message_template = []
     if chain:
         with open("gpt_chains.json") as f:  
             try: 
