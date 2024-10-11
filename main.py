@@ -25,6 +25,8 @@ from matplotlib import font_manager
 import matplotlib as mpl
 import numpy as np
 
+import openai
+
 fm = mpl.font_manager
 fm._get_fontconfig_fonts.cache_clear()
 
@@ -39,7 +41,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = ["symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"]
+req_files = sorted(["gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -71,6 +73,11 @@ if not all(x in os.listdir() for x in req_files):
         a = "main"
         b = input("Key: ")
         json.dump({a:b},f)
+    with open("openai_key.json","w") as f:
+        print(f"\nOpenAI API Key\nLeave blank to skip\n---")
+        a = "main"
+        b = input("Key: ")
+        json.dump({"main":b},f)
     with open("dev_env.json","w") as f:
         print(f"\nChannel for logging purposes\nChange this by modifying 'dev_env.json'\n---")
         a = "loggingchannel"
@@ -109,6 +116,12 @@ with open("dc_bot_tokens.json") as f:
     discord_bot_token = json.load(f)
 with open("sentry_dsn.json") as f:
     dsn = json.load(f)["main"]
+with open("openai_key.json") as f:
+    gptkey = json.load(f)["main"]
+    if gptkey != "":
+        client = openai.OpenAI(api_key=gptkey)
+with open("gpt_usage.json") as f:
+    gpt_usage = json.load(f)
 with open("verbose_silence.json") as f:
     try:
         silence = json.load(f)["dur"]
@@ -605,6 +618,10 @@ async def resetbasedata(ctx: interactions.SlashContext):
         silence = 0
         with open("verbose_silence.json","w") as f:
             json.dump({"dur":0},f)
+    with open("openai_key.json") as f:
+        gptkey = json.load(f)["main"]
+        if gptkey != "":
+            client = openai.OpenAI(api_key=gptkey)
     calibrate()
     await ctx.send("Done.")
 
@@ -620,6 +637,17 @@ async def paginatortest(ctx: interactions.SlashContext):
 
 def test():
     print("!!!")
+
+@interactions.slash_command(name="set_gpt_usage", description="Set how many tokens a specified user has left. (-1: Infinite)", scopes=[scope])
+@interactions.slash_option(name="user", description="Target user (as ID)", required=True, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="amount", description="Tokens imposed on user. -1 stands for no limit.", required=True, opt_type=interactions.OptionType.INTEGER, min_value=-1)
+async def set_gpt_usage(ctx: interactions.SlashContext, user: str, amount: int):
+    global gpt_usage
+    gpt_usage[user] = amount
+    with open("gpt_usage.json","w") as f:
+        json.dump(gpt_usage,f)
+    await ctx.send("Applied.")
+
 
 #---------------------------
 # GLOBAL COMMANDS BELOW
@@ -2391,6 +2419,112 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
     else:
         output = f"{emojidict['Error']} Access to imgur-API was denied."
     await ctx.send(output,ephemeral=hidden)
+
+@interactions.slash_command(name="gpt", sub_cmd_description="Get info on how much you can prompt.", sub_cmd_name="status")
+async def gpt_status(ctx: interactions.SlashContext):
+    global gpt_usage
+    if gptkey == "":
+        await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
+    try:
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
+    except:
+        gpt_usage[str(ctx.author_id)] = 100000
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
+    await ctx.send(f"You have **{tokenCurrency if tokenCurrency != -1 else '∞'}** tokens left to use.\n\n-# Tips:\n-# - 750 words are about 1k tokens.\n-# - Using GPT-o1 mini adds a x20 multiplier to token deduction.\n-# - Tokens are refilled manually. Ask bot administrators for refills.")
+
+@interactions.slash_command(name="gpt", sub_cmd_description="Prompt ChatGPT. Have fun.", sub_cmd_name="prompt")
+@interactions.slash_option(name="content", description="Your prompt.", required=True, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="export", description="Always let the response be a text file.", required=False, opt_type=interactions.OptionType.STRING)
+@interactions.slash_option(name="model", description="Select between models to use. Premium models need more tokens. Default: 'gpt-4o-mini'.", required=False, opt_type=interactions.OptionType.STRING, choices=[interactions.SlashCommandChoice(name="GPT-4o Mini",value="gpt-4o-mini"),interactions.SlashCommandChoice(name="GPT-o1 mini",value="o1-mini")])
+@interactions.slash_option(name="temperature", description="Value of Variance. High values (≥ 30) can lead to illegible results. Default: 0", required=False, opt_type=interactions.OptionType.INTEGER, min_value=0, max_value=100)
+@interactions.slash_option(name="chain", description="Whether to continue with a conversation. (Expensive on tokens)", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool = False, model: str = "gpt-4o-mini", temperature: int = 0, chain: bool = False):
+    global gpt_usage
+    await ctx.defer()
+    if gptkey == "":
+        await ctx.send(f"{emojidict['Warning']} This feature hasn't been set up yet.")
+    try:
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
+    except:
+        gpt_usage[str(ctx.author_id)] = 100000
+        tokenCurrency = gpt_usage[str(ctx.author_id)]
+    if tokenCurrency == 0:
+        await ctx.send(f"{emojidict['Warning']} You reached your usage limit.")
+        return
+    premium = False
+    if model != "gpt-3.5-turbo":
+        """
+        if str(ctx.author_id) not in whitelist:
+            await ctx.send(f"{emojidict['Warning']} You are not whitelisted for usage of non GPT 3.5 Turbo.")
+        """
+        premium = True
+
+    prompt = content
+    if len(prompt) < 5:
+        await ctx.send(f"{emojidict['Warning']} Your prompt is too short.")
+        return
+    message_template = [{"role": "system", "content": "You are Shenzhia, a helpful (female) assistant that relays prompts to ChatGPT. When you receive a prompt that ChatGPT cannot respond to or refuses to engage with, you will relay the prompt and indicate that ChatGPT is unable to assist. Your responses should reflect that you are simply passing on the message."}]
+    if chain:
+        with open("gpt_chains.json") as f:  
+            try: 
+                conv_messages = json.load(f)[str(ctx.author_id)]
+                messages = conv_messages
+            except Exception as e:
+                print(e)
+                messages = message_template
+    else:
+        messages = message_template
+    messages.append({"role": "user", "content": prompt})
+    try:
+        response = client.chat.completions.create(model=model,messages=messages,temperature=temperature/100,max_tokens=1024)
+    except Exception as error:
+        await ctx.send(f"{emojidict['Error']} Request failed:\n```{error}```")
+        return
+    output = response.choices[0].message.content
+    messages.append({"role": "assistant", "content": output})
+    with open("gpt_chains.json") as f:
+        conversationData = json.load(f)
+    conversationData[ctx.author_id] = messages
+    with open("gpt_chains.json", "w") as f:
+        json.dump(conversationData,f)
+    if "@everyone" in output or "@here" in output or "<@" in output:
+        export = True
+    if tokenCurrency != -1:
+        if premium == True:
+            if int(response.usage.total_tokens)*10 <= tokenCurrency:
+                tokenCurrency -= int(response.usage.total_tokens)*10
+            else:
+                tokenCurrency == 0
+        else:
+            if int(response.usage.total_tokens) <= tokenCurrency:
+                tokenCurrency -= int(response.usage.total_tokens)
+            else:
+                tokenCurrency == 0
+    gpt_usage[str(ctx.author_id)] = tokenCurrency
+    with open("gpt_usage.json","w") as f:
+        json.dump(gpt_usage,f)
+    appendstr = ""
+    if len([x for x in messages if x['role'] == 'user']) > 1:
+        appendstr = f"{emojidict['Info']} Conversation-Chain: {len([x for x in messages if x['role'] == 'user'])}"
+    if tokenCurrency < 3000 and tokenCurrency != -1:
+        appendstr = f"{emojidict['Warning']} **Approaching usage limit.**"
+    if tokenCurrency == 0:
+        appendstr = f"{emojidict['Warning']} **Usage limit reached!**"
+    try:
+        if export == True:
+            raise Exception()
+        if appendstr == "":
+            await ctx.send(output)
+        else:
+            await ctx.send(appendstr+"\n\n"+output)
+    except:
+        with open("gpt_result.txt", "w") as f:
+            f.write(output)
+        with open("gpt_result.txt", "rb") as file:
+            if appendstr == "":
+                await ctx.send(file=interactions.File(file, "gpt_result.txt"))
+            else:
+                await ctx.send(f"{appendstr}",file=interactions.File(file, "gpt_result.txt"))
 
 @interactions.slash_command(name="gallery", description="View art of Shenzhia.")
 async def gallery(ctx: interactions.SlashContext):

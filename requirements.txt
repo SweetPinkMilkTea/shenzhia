@@ -37,6 +37,7 @@ idna==3.7
 interactions.py==5.11.0
 itsdangerous==2.1.2
 Jinja2==3.1.4
+jiter==0.6.1
 kiwisolver==1.4.5
 MarkupSafe==2.1.5
 matplotlib==3.8.0
@@ -44,6 +45,7 @@ mcstatus==11.0.1
 multidict==6.0.4
 mutagen==1.47.0
 numpy==1.26.1
+openai==1.51.2
 openpyxl==3.0.10
 packaging==23.2
 pandas==2.2.0
@@ -68,7 +70,7 @@ stem==1.8.2
 tomli==2.0.1
 torrequest==0.1.0
 tqdm==4.66.3
-typing_extensions==4.10.0
+typing_extensions==4.12.2
 tzdata==2024.1
 urllib3==2.2.2
 websockets==12.0
