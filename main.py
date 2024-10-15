@@ -2404,9 +2404,62 @@ async def status(ctx: interactions.SlashContext):
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
-@interactions.slash_command(name="randomimg", description="Get a randomly chosen image from imgur.")
+@interactions.slash_command(name="imagelookup", sub_cmd_description="Find specific images on imgur.", sub_cmd_name="focus")
+@interactions.slash_option(name="query", description="What to search for", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="hidden", description="Hide the response from everyone but you.", required=False, opt_type=interactions.OptionType.BOOLEAN)
-async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
+@interactions.slash_option(name="multi", description="Get the whole palette of search results", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def imagelookup_f(ctx: interactions.SlashContext, query: str, hidden: bool = False, multi: bool = False):
+    await ctx.defer(ephemeral=hidden)
+    client_id = "8b47ca7b21ed9f1"
+    url = f'https://api.imgur.com/3/gallery/search/time/all/1'
+    headers = {"Authorization": f"Client-ID {client_id}"}
+
+    params = {
+        'q': query
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers, params=params) as response:
+            data = await response.json()
+    with open("export.json","w") as f:
+        json.dump(data,f)
+    if "data" in data:
+        if len(data["data"]) == 0:
+            await ctx.send(f"{emojidict['Warning']} Nothing found.\n-# Try generalizing your query a bit...")
+        if not multi:
+            output = random.choice(data["data"])["link"]
+            await ctx.send(output,ephemeral=hidden)
+            return
+        else:
+            embeds = []
+            for i in data["data"]:
+                if "images" in i.keys():
+                    title = i["title"]
+                    if title == "":
+                        title = "NO TITLE"
+                    if len(title) > 92:
+                        title = title[:90] + "..."
+                    for j in i["images"]:
+                        warnstr = ""
+                        if "mp4" in j["link"]:
+                            warnstr = f"-# {emojidict['Warning']} Unplayable Embed. [≫ View source]({j['link']})"
+                        embed = interactions.Embed(title=f"\"{title}\"", description=warnstr)
+                        embed.set_image(j["link"])
+                        embeds.append(embed)
+                else:
+                    pass
+
+            pg = Paginator.create_from_embeds(bot, *embeds)
+            pg.show_select_menu = True
+            await pg.send(ctx)
+    else:
+        output = f"{emojidict['Error']} Access to imgur-API was denied."
+        await ctx.send(output,ephemeral=hidden)
+
+@interactions.slash_command(name="imagelookup", sub_cmd_description="Get a random image from imgur.", sub_cmd_name="random")
+@interactions.slash_option(name="hidden", description="Hide the response from everyone but you.", required=False, opt_type=interactions.OptionType.BOOLEAN)
+async def imagelookup_r(ctx: interactions.SlashContext, hidden: bool = False):
+    await ctx.defer(ephemeral=hidden)
     client_id = "8b47ca7b21ed9f1"
     url = "https://api.imgur.com/3/gallery/random/random/"
     headers = {"Authorization": f"Client-ID {client_id}"}
@@ -2415,7 +2468,7 @@ async def randomimg(ctx: interactions.SlashContext, hidden: bool = False):
         async with session.get(url, headers=headers) as response:
             data = await response.json()
     if "data" in data:
-        output = data["data"][random.randint(0,59)]["link"]
+        output = random.choice(data["data"])["link"]
     else:
         output = f"{emojidict['Error']} Access to imgur-API was denied."
     await ctx.send(output,ephemeral=hidden)
