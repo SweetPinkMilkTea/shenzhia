@@ -41,7 +41,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = sorted(["gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
+req_files = sorted(["message_bookmarks.json","gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -231,7 +231,7 @@ def send_api_error(reason):
 
 
 startuptime = int(time.time())
-bot = interactions.Client(intents=interactions.Intents.DEFAULT, delete_unused_application_cmds=True, send_command_tracebacks=False)
+bot = interactions.Client(intents=interactions.Intents.DEFAULT | interactions.Intents.MESSAGE_CONTENT | interactions.Intents.GUILD_MESSAGES, delete_unused_application_cmds=True, send_command_tracebacks=False)
 bot.load_extension('interactions.ext.sentry', token=dsn)
 
 # ----------------
@@ -241,7 +241,7 @@ bot.load_extension('interactions.ext.sentry', token=dsn)
 @interactions.listen(CommandError, disable_default_listeners=False)
 async def on_command_error(event: CommandError):
     traceback.print_exception(event.error)
-    embed = interactions.Embed(title=random.choice(["Yikes!","Ouch...","Aw...","Oops.",":("]),
+    embed = interactions.Embed(title=random.choice(["Yikes!","Ouch...","Aw...","Oops.",":(",":/"]),
                         color=0xff0000,
                         timestamp=datetime.datetime.now(),
                         description=f"An unexpected error occured.\nAn error log was generated and sent internally.")
@@ -2612,6 +2612,60 @@ async def help(ctx: interactions.SlashContext):
     embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/shenzhia/issues>)", inline=True)
     await ctx.send(embed=embed)
 
+@interactions.message_context_menu(name="Set bookmark", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
+async def bookmark_set(ctx: interactions.ContextMenuContext):
+    message: interactions.Message = ctx.target
+    await ctx.defer(ephemeral=True)
+    with open("message_bookmarks.json") as f:
+        bookmarks = json.load(f)
+    try:
+        link = message.jump_url
+        content = message.content
+        author = await bot.fetch_user(int(message.author.id))
+        hasAttachment = len(message.attachments) > 0 
+        if str(ctx.author.id) not in bookmarks.keys():
+            bookmarks[str(ctx.author.id)] = []
+        if len(bookmarks[str(ctx.author.id)]) >= 25:
+            await ctx.send(f"{emojidict['Error']} Max Bookmarks created.",ephemeral=True)
+            return
+        bookmarks[str(ctx.author.id)].append({"author":str(author),"content":str(content),"link":str(link),"att":hasAttachment})
+        with open("message_bookmarks.json","w") as f:
+            json.dump(bookmarks, f)
+        await ctx.send(f"{emojidict['Info']} Saved.\n-# Slots left: {25 - len(bookmarks[str(ctx.author.id)])}",ephemeral=True)
+    except Exception as e:
+        await ctx.send(f"{emojidict['Error']} {e}",ephemeral=True)
+
+@interactions.slash_command(name="messagebookmark", description="View message-bookmarks you have created.", integration_types=[interactions.IntegrationType.GUILD_INSTALL, interactions.IntegrationType.USER_INSTALL])
+async def bookmark_view(ctx: interactions.SlashContext):
+    await ctx.defer(ephemeral=True)
+    with open("message_bookmarks.json") as f:
+        bookmarks = json.load(f)
+    if len(bookmarks.get(str(ctx.author.id),[])) == 0:
+        await ctx.send(f"{emojidict['Warning']} Nothing here yet.",ephemeral=True)
+        return
+    bmList = bookmarks.get(str(ctx.author.id))
+    embeds = []
+    for messageObject in bmList:
+        quote = "\""
+        descText = f"{quote+messageObject['content']+quote if len(messageObject['content']) > 0 else '`No Text Content`'}\n\n-# Jump to message:\n{messageObject['link']}"
+        if messageObject['att']:
+            descText += f"\n\n-# {emojidict['Info']} This message has 1 or more attachments."
+        embed = interactions.Embed(title=f"≫ {messageObject['author']}", description=descText)
+        embeds.append(embed)
+    pg = Paginator.create_from_embeds(bot, *embeds)
+    pg.show_select_menu = True
+
+    async def bookmarkdeletion(ctx):
+        list_modal = interactions.Modal(interactions.ShortText(label="Page Numbers", placeholder="Seperate with ','!", custom_id="userinput"), title="Remove Entries", custom_id="removeBookmarks")
+        await ctx.send_modal(modal=list_modal)
+
+    pg.show_callback_button = True
+    pg.callback_button_emoji = "❌"
+    pg.callback = bookmarkdeletion
+    await pg.send(ctx)
+    
+    
+
 # -------------------
 # CALLBACKS
 # -------------------
@@ -2623,5 +2677,23 @@ async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
         await ctx.send(f"Rolled: {random.choice(userinput.split(sep=','))}")
     except:
         await ctx.send(f"{emojidict['Error']}: Something went wrong.")
+
+@interactions.modal_callback("removeBookmarks")
+async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
+    await ctx.defer(ephemeral=True)
+    try:
+        removalItems = userinput.strip().replace(" ","").split(",")
+        for i in range(len(removalItems)):
+            removalItems[i] = int(removalItems[i]) - 1
+        removalItems.sort(reverse=True)
+        with open("message_bookmarks.json") as f:
+            bookmarks = json.load(f)
+        for i in removalItems:
+            bookmarks[str(ctx.author_id)].pop(i)
+        with open("message_bookmarks.json","w") as f:
+            json.dump(bookmarks,f)
+        await ctx.send(f"{emojidict['Info']} Successfully removed pages {removalItems}.",ephemeral=True)
+    except Exception as e:
+        await ctx.send(f"{emojidict['Error']} Something went wrong: `{e}`",ephemeral=True)
 
 bot.start(discord_bot_token[login])
