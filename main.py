@@ -1583,19 +1583,8 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
                 hcInfoWarning = True
         powerlevellist = []
         gadgetcount = starpowercount = gearcount = neededCoins = neededPP = neededCurrency = maxed =  0
-        maxcredits = 0
-        creditvalues = {}
         outdatedlist = False
-        for i in range(5):
-            for j in [['NITA', 'COLT', 'BULL', 'BROCK', 'EL PRIMO', 'BARLEY', 'POCO', 'ROSA'],['JESSIE', 'DYNAMIKE', 'TICK', '8-BIT', 'RICO', 'DARRYL', 'PENNY', 'CARL', 'JACKY', 'GUS'],['BO', 'EMZ', 'STU', 'PIPER', 'PAM', 'FRANK', 'BIBI', 'BEA', 'NANI', 'EDGAR', 'GRIFF', 'GROM', 'BONNIE', 'GALE', 'COLETTE', 'BELLE', 'ASH', 'LOLA', 'SAM', 'MANDY', 'MAISIE', 'HANK', 'PEARL', 'LARRY & LAWRIE', 'ANGELO', 'BERRY'],['MORTIS', 'TARA', 'GENE', 'MAX', 'MR. P', 'SPROUT', 'BYRON', 'SQUEAK', 'LOU', 'RUFFS', 'BUZZ', 'FANG', 'EVE', 'JANET', 'OTIS', 'BUSTER', 'GRAY', 'R-T', 'WILLOW', 'DOUG', 'CHUCK', 'CHARLIE', 'MICO', 'MELODIE', 'LILY', 'CLANCY', 'MOE'],['SPIKE', 'CROW', 'LEON', 'SANDY', 'AMBER', 'MEG', 'SURGE', 'CHESTER', 'CORDELIUS', 'KIT', 'DRACO', 'KENJI']][i]:
-                maxcredits += [160,430,925,1900,3800][i]
-                creditvalues[j] = [160,430,925,1900,3800][i]
         for i in data["brawlers"]:
-            if i["name"] != "SHELLY":
-                try:
-                    maxcredits -= creditvalues[i["name"]]
-                except:
-                    outdatedlist = True
             powerlevellist.append(i["power"])
             gadgetcount += len(i["gadgets"])
             starpowercount += len(i["starPowers"])
@@ -1627,7 +1616,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         warning = emojidict['Warning']
         embed.add_field(name=f"BRAWLER GEAR COMPLETION",value=f"{emojidict['GadgetIcon']} `{gadgetcount}/{maxGadgets}`\n{emojidict['SPIcon']} `{starpowercount}/{maxStarpower}`\n{emojidict['GearIcon']} `{gearcount}`\n{emojidict['HChargeIcon']} `{hcinfo[tag_element]['value']}/{maxHypercharges}`{'' if not hcInfoWarning else newline+warning+' '+infotext}",inline=True)
         embed.add_field(name=f"BRAWLER POWER COMPLETION",value=f"`P11     : {powerlevellist.count(11)}`\n`P10     : {powerlevellist.count(10)}`\n`P 9     : {powerlevellist.count(9)}`\n`Below P9: {len(data['brawlers']) - (powerlevellist.count(11)+powerlevellist.count(10)+powerlevellist.count(9))}`",inline=True)
-        embed.add_field(name=f"RESCOURCE DEFECIT",value=f"{emojidict['PPoint']} {neededPP:,}\n{emojidict['Coin']} {neededCoins:,}\n{emojidict['Credit']} {maxcredits:,}\nIncludes P11, {2 if advanced else 1} SP, {2 if advanced else 1} Gadget and {6 if advanced else 2} Gears per brawler,\nas well as all available Hypercharges\n{'Does not include saved up rescources'}{'' if not outdatedlist else newline+warning+' Credit requirements outdated.'}",inline=False)
+        embed.add_field(name=f"RESCOURCE DEFECIT",value=f"{emojidict['PPoint']} {neededPP:,}\n{emojidict['Coin']} {neededCoins:,}\nIncludes P11, {2 if advanced else 1} SP, {2 if advanced else 1} Gadget and {6 if advanced else 2} Gears per brawler,\nas well as all available Hypercharges\n{'Does not include saved up rescources'}{'' if not outdatedlist else newline+warning+' Credit requirements outdated.'}",inline=False)
         if not advanced:
             embed.add_field(name=f"TOTAL PROGRESSION",value=f"{maxed} / {len(data['brawlers'])} maxed brawlers\nCompletion% : {round(((maxCurrency-neededCurrency)/maxCurrency)*100,2)}%",inline=False)
         else:
