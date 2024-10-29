@@ -821,9 +821,9 @@ async def profilelinkview(ctx: interactions.SlashContext):
                     icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
-@interactions.slash_command(name="bling", description="Look for a player's projected Bling gain and Trophy Reset.")
+@interactions.slash_command(name="seasonreset", description="Look for a player's projected Bling gain and Trophy Reset.")
 @interactions.slash_option(name="tag", description="Requested Profile (empty: your own)", required=False, opt_type=interactions.OptionType.STRING)
-async def bling(ctx: interactions.SlashContext, tag: str = ""):
+async def seasonreset(ctx: interactions.SlashContext, tag: str = ""):
     with open("bs_data.json") as f:
         bsdict = json.load(f)    
     with open("bs_tags.json","r") as f:
@@ -869,31 +869,26 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         tlist = []
         for i in data["brawlers"]:
             tlist.append(i["trophies"])
-        tlist.sort(reverse=True)
-        xtlist = tlist[0:10]
-        templist = []
-        for i in range(len(xtlist)):
-            if xtlist[i] < 501:
-                templist.append(i)
-        templist.reverse()
-        for i in templist:
-            xtlist.pop(i)
-        bling = 0
-        deduction = 0
-        for i in xtlist:
-            for k in range(len(cutoffs)):
-                if i < list(cutoffs.keys())[k]:
-                    deduction += i - (list(cutoffs.keys())[k-1]-1)
-                    bling += cutoffs[list(cutoffs.keys())[k-1]]
-                    break
+        pointlist = [0,100,400,1000,3000]
+        points = 0
+        for i in tlist:
+            if i > 1000:
+                points += i - 1000
 
+        index = 0
+        for i in pointlist:
+            if points >= i:
+                index += 1
 
         embed = interactions.Embed(title=f"{data['name']} ({element})",
                         color=0x6f07b4,
                         timestamp=datetime.datetime.now())
 
-        embed.add_field(name=f"{emojidict['Trophy']}",value=f"{totaltrophies:,} ≫ {totaltrophies-deduction:,} (-{deduction})",inline=False)
-        embed.add_field(name=f"{emojidict['Bling']}",value="+"+str(bling),inline=False)
+        embed.add_field(name=f"{emojidict['Bling']}",value=f"TIER {index}",inline=False)
+        if points > 0:
+            embed.add_field(name=f"{emojidict['Trophy']}",value=f"{totaltrophies:,} ≫ {totaltrophies-points:,} (-{points})",inline=False)
+        else:
+            embed.add_field(name=f"{emojidict['Trophy']}",value=f"No change.",inline=False)
         embed.set_footer(text="Shenzhia",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
