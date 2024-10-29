@@ -1461,7 +1461,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     spindicator = emojidict['SP_OK'] if len(brawlerlist[i]["starPowers"]) > 0 else emojidict['Slot_Empty']
                     gearindicator1 = emojidict['Gear_OK'] if len(brawlerlist[i]["gears"]) > 0 else emojidict['Slot_Empty']
                     gearindicator2 = emojidict['Gear_OK'] if len(brawlerlist[i]["gears"]) > 1 else emojidict['Slot_Empty']
-                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"{emojidict['Trophy']} {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} [T{brawlerlist[i]['rank']}]{nl}{tsr_display}{nl if su_data != 0 else ''}{mastery_display}",inline=True)
+                    tier = f"[T{brawlerlist[i]['rank']}]" if brawlerlist[i]['rank'] != 51 else ""
+                    embed.add_field(name=f"[#{i+1}] {bname}\n{powericonlist[brawlerlist[i]['power']-1]} {gadgetindicator}{spindicator}{gearindicator1}{gearindicator2}",value=f"{emojidict['Trophy']} {brawlerlist[i]['trophies']} / {brawlerlist[i]['highestTrophies']} {tier}{nl}{tsr_display}{nl if su_data != 0 else ''}{mastery_display}",inline=True)
                 except Exception as e:
                     embed.add_field(name=f"[#-] ---",value=f"{emojidict['Trophy']} {0} / {0}{nl}{tsr_display}",inline=True)
                     print(f"{e} : {str(e)}")
