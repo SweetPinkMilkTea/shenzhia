@@ -2362,6 +2362,7 @@ async def status(ctx: interactions.SlashContext):
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
+"""
 @interactions.slash_command(name="imagelookup", sub_cmd_description="Find specific images on imgur.", sub_cmd_name="focus")
 @interactions.slash_option(name="query", description="What to search for", required=True, opt_type=interactions.OptionType.STRING)
 @interactions.slash_option(name="hidden", description="Hide the response from everyone but you.", required=False, opt_type=interactions.OptionType.BOOLEAN)
@@ -2430,6 +2431,7 @@ async def imagelookup_r(ctx: interactions.SlashContext, hidden: bool = False):
     else:
         output = f"{emojidict['Error']} Access to imgur-API was denied."
     await ctx.send(output,ephemeral=hidden)
+"""
 
 @interactions.slash_command(name="gpt", sub_cmd_description="Get info on how much you can prompt.", sub_cmd_name="status")
 async def gpt_status(ctx: interactions.SlashContext):
