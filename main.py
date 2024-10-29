@@ -309,7 +309,7 @@ async def autosync():
                     try:
                         x = bsdict[tags[k][0]]
                     except:
-                        bsdict[tags[k][0]] = {"history":[],"updates":False}
+                        bsdict[tags[k][0]] = {"history":[],"updates":True}
                     tag = urllib.parse.quote(tags[k][0])
                     url = f"https://api.brawlstars.com/v1/players/{tag}/"
 
@@ -717,42 +717,6 @@ async def leaderboard(ctx: interactions.SlashContext):
     await ctx.send(embed=embed)
     return
 
-@interactions.slash_command(name="roll", description="Get a random number from a specified range.")
-@interactions.slash_option(name="maximum", description="The highest possible value", required=True, opt_type=interactions.OptionType.INTEGER, min_value=2, max_value=9999999)
-@interactions.slash_option(name="multiplier", description="How often to roll", required=False, opt_type=interactions.OptionType.INTEGER, min_value=1, max_value=10)
-async def roll(ctx: interactions.SlashContext, maximum: int, multiplier: int = 1):
-    await ctx.defer()
-    output = ""
-    for i in range(multiplier):
-        output += "[" + str(random.randint(1,maximum)) + "]"
-        output += ", " if i+1 != multiplier else ""
-    await ctx.send(f"```\n@{maximum} // x{multiplier}\n```\n{output}")
-
-@interactions.slash_command(name="shuffle", description="Get a random item from a specified list.")
-async def shuffle(ctx: interactions.SlashContext):
-    list_modal = interactions.Modal(interactions.ShortText(label="List to shuffle", placeholder="Seperate items with ','!", custom_id="userinput"), title="List-Shuffle", custom_id="shuffle")
-    await ctx.send_modal(modal=list_modal)
-
-@interactions.slash_command(name="autosync", description="Enable automatic trophy saving for your primary linked tag. (Requires linked profile)")
-async def enable_autosync(ctx: interactions.SlashContext):
-    await ctx.defer()
-    with open("bs_tags.json","r") as f:
-        tags = json.load(f)
-    with open("bs_data.json","r") as f:
-        bsdict = json.load(f)
-    if not str(ctx.author.id) in tags.keys():
-        await ctx.send(f"{emojidict['Warning']} You are not linked to a BS-Account to sync.")
-        return
-    for i in tags[str(ctx.author.id)]:
-        if not i in bsdict.keys():
-            await ctx.send(f"{emojidict['Warning']} You have yet to use '/performance' {'at at least one of your linked accounts ' if len(tags[str(ctx.author.id)]) > 1 else ''}to initiate a save.")
-            return
-    for i in tags[str(ctx.author.id)]:
-        bsdict[i]["updates"] = True
-    await ctx.send(f"{emojidict['Info']} AutoSync is turned on.")
-    with open("bs_data.json","w") as f:
-        json.dump(bsdict,f)
-
 @interactions.slash_command(name="profilelink", sub_cmd_description="Set your own tag, so you can quickly use commands and access other special utility.", sub_cmd_name="add")
 @interactions.slash_option(name="tag", description="Your tag, with '#' in front.", required=True, opt_type=interactions.OptionType.STRING)
 async def profilelinkadd(ctx: interactions.SlashContext, tag: str = ""):
@@ -879,7 +843,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
         try:
             x = bsdict[i]
         except:
-            bsdict[i] = {"history":[],"updates":False}
+            bsdict[i] = {"history":[],"updates":True}
     embeds = []
     for element in tag:
         url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(element)}/"
@@ -969,7 +933,7 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
         try:
             x = bsdict[tag_element]
         except:
-            bsdict[tag_element] = {"history":[],"updates":False}
+            bsdict[tag_element] = {"history":[],"updates":True}
         url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag_element)}/"
         url2 = f"https://api.hpdevfox.ru/profile/{tag_element.replace('#','')}"
         headers = {
@@ -1152,7 +1116,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         try:
             x = bsdict[tag_element]
         except:
-            bsdict[tag_element] = {"history":[],"updates":False}
+            bsdict[tag_element] = {"history":[],"updates":True}
         url = f"https://api.brawlstars.com/v1/players/{urllib.parse.quote(tag_element)}/"
         url2 = f"https://api.hpdevfox.ru/profile/{tag_element.replace('#','')}"
         headers = {
@@ -1549,14 +1513,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 streak_display += '✨'*abs(streak) if streak > 0 else '❌'*abs(streak)
                 embed.add_field(name=f"RECENT WIN-RATE",value=f"{round((wins/total)*100,2)}%{' ('+str(round((wins/(total-flukes))*100,2))+'%)' if flukes > 0 else ''}\n{streak_display}",inline=True)
         #Finishing
-        try:
-            if tag_element == tags[str(ctx.author.id)][0]:
-                asyc = 'ON' if bsdict[tags[str(ctx.author.id)][0]]['updates'] else 'OFF'
-            else:
-                raise Exception()
-        except:
-            asyc = "---"
-        embed.add_field(name=f" ",value=f"ASYC: {asyc} / ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2) if not excludeSF else '---'}%",inline=False)
+        embed.add_field(name=f" ",value=f"ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2) if not excludeSF else '---'}%",inline=False)
         if su_data == 0:
             embed.add_field(name=f"{emojidict['Warning']}", value="Extension-API is down. Certain data is currently unavailable.")
         if str(ctx.author_id) not in tags:
@@ -1596,7 +1553,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
         try:
             x = bsdict[tag_element]
         except:
-            bsdict[tag_element] = {"history":[],"updates":False}
+            bsdict[tag_element] = {"history":[],"updates":True}
         #personal data req
         url = f"https://api.brawlstars.com/v1/players/%23{urllib.parse.quote(tag_element[1:])}/"
         headers = {
@@ -2669,14 +2626,6 @@ async def bookmark_view(ctx: interactions.SlashContext):
 # -------------------
 # CALLBACKS
 # -------------------
-
-@interactions.modal_callback("shuffle")
-async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
-    await ctx.defer()
-    try:
-        await ctx.send(f"Rolled: {random.choice(userinput.split(sep=','))}")
-    except:
-        await ctx.send(f"{emojidict['Error']}: Something went wrong.")
 
 @interactions.modal_callback("removeBookmarks")
 async def modal_shuffle(ctx: interactions.ModalContext, userinput: str):
