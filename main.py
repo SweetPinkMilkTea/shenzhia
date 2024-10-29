@@ -1176,23 +1176,21 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         excludeSF = False
         for i in range(9):
             try:
-                pplist.append(brawlerlist[i]["trophies"]-500 if brawlerlist[i]["trophies"]-500 > 0 else 0)
+                pplist.append(brawlerlist[i]["trophies"]-800 if brawlerlist[i]["trophies"]-800 > 0 else 0)
                 try:
                     spice += spdict[brawlerlist[i]["name"]] / [2,2,2,1,1,1,0.5,0.5,0.5][i]
                 except:
                     excludeSF = True
             except:
                 excludeSF = True
-        if len(pplist) == 9 and min(pplist) < 750:
+        if len(pplist) == 9 and min(pplist) < 700:
             ex_certified = False
         ppscore = 0
         pplist_b = []
         index2 = 0
         for i in pplist:
-            ppscore += int(round(1.7777777*((i if i < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
-            ppscore += (i - 750) if i > 750 else 0
-            pplist_b.append(int(round(1.7777777*((i if i < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2]))
-            pplist_b[index2] += ((i - 750) if i > 750 else 0)
+            ppscore += int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
+            pplist_b.append(int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2]))
             index2 += 1
         if ppscore >= 1000000 and not ex_certified:
             ppscore = 999999
@@ -1794,17 +1792,16 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             ex_certified = True
             for k in range(9):
                 try:
-                    pplist.append(brawlerlist[k]["trophies"]-500 if brawlerlist[k]["trophies"]-500 > 0 else 0)
+                    pplist.append(brawlerlist[k]["trophies"]-800 if brawlerlist[k]["trophies"]-800 > 0 else 0)
                 except:
                     pass
             
-            if len(pplist) == 9 and min(pplist) < 750:
+            if len(pplist) == 9 and min(pplist) < 700:
                 ex_certified = False
             ppscore = 0
             index2 = 0
             for k in pplist:
-                ppscore += int(round(1.7777777*((k if k < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
-                ppscore += (k - 750) if k > 750 else 0
+                ppscore += int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
                 index2 += 1
             if ppscore >= 1000000 and not ex_certified:
                 ppscore = 999999
@@ -2042,14 +2039,13 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     pplist = []
                     for l in range(9):
                         try:
-                            pplist.append(brawlerlist[l]["trophies"]-500 if brawlerlist[l]["trophies"]-500 > 0 else 0)
+                            pplist.append(brawlerlist[l]["trophies"]-800 if brawlerlist[l]["trophies"]-800 > 0 else 0)
                         except:
                             pass
                     ppscore = 0
                     index2 = 0
                     for l in pplist:
-                        ppscore += int(round(1.7777777*((l if l < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
-                        ppscore += (l - 750) if l > 750 else 0
+                        ppscore += int(round(2.0408163*(l if l < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
                         index2 += 1
                     rank = emojidict['RankNone']
                     rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
