@@ -41,7 +41,7 @@ for font_file in font_files:
 if "graphs" not in os.listdir():
     os.mkdir("graphs")
 ## Create Files
-req_files = sorted(["message_bookmarks.json","gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_spicyness.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
+req_files = sorted(["message_bookmarks.json","gpt_chains.json","gpt_usage.json","openai_key.json","symbols.json","dev_env.json","fastlogin.json","bs_tags.json","bs_data.json","bs_powerleague.json","bs_ar_supplementary.json","verbose_silence.json","bs_guild_leaderboard_data.json","bs_hc_info.json","dc_bot_tokens.json","bs_club_member_cache.json","bs_brawler_leaderboard.json","sentry_dsn.json","bs_ar.json","dc_id_rel.json","tsr_best.json","bs_api_token.json","bs_brawler_best.json"])
 if not all(x in os.listdir() for x in req_files):
     for i in req_files:
         if i not in os.listdir():
@@ -1164,20 +1164,12 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             gadgetcount += len(i["gadgets"])
             starpowercount += len(i["starPowers"])
             gearcount += len(i["gears"])
-        spice = 0
-        with open("bs_spicyness.json") as f:
-            spdict = json.load(f)
         ex_certified = True
-        excludeSF = False
         for i in range(9):
             try:
                 pplist.append(brawlerlist[i]["trophies"]-800 if brawlerlist[i]["trophies"]-800 > 0 else 0)
-                try:
-                    spice += spdict[brawlerlist[i]["name"]] / [2,2,2,1,1,1,0.5,0.5,0.5][i]
-                except:
-                    excludeSF = True
             except:
-                excludeSF = True
+                pass
         if len(pplist) == 9 and min(pplist) < 700:
             ex_certified = False
         ppscore = 0
@@ -1507,7 +1499,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                 streak_display += '✨'*abs(streak) if streak > 0 else '❌'*abs(streak)
                 embed.add_field(name=f"RECENT WIN-RATE",value=f"{round((wins/total)*100,2)}%{' ('+str(round((wins/(total-flukes))*100,2))+'%)' if flukes > 0 else ''}\n{streak_display}",inline=True)
         #Finishing
-        embed.add_field(name=f" ",value=f"ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,} / SF: {round(spice,2) if not excludeSF else '---'}%",inline=False)
+        embed.add_field(name=f" ",value=f"ABT: {int(round(averagetrophies,0)) if averagetrophies != 'N/A' else averagetrophies} / ABP: {round(averagepower,2) if averagepower != 'N/A' else averagepower} / SDR: {int((ssdv+dsdv)/(ssdv+dsdv+v3v)*100)} / WD: {wins:,}>{total:,}-{flukes:,}",inline=False)
         if su_data == 0:
             embed.add_field(name=f"{emojidict['Warning']}", value="Extension-API is down. Certain data is currently unavailable.")
         if str(ctx.author_id) not in tags:
