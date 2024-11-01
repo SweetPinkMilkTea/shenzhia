@@ -223,7 +223,7 @@ def send_api_error(reason):
     elif reason == "notFound":
         return f"{emojidict['Warning']} This profile doesn't exist."
     elif reason == "ExAPIinvalid":
-        return f"{emojidict['Warning']} Extension-API down or unresponsive.\n-# Try again later or use `wait_longer`."
+        return f"{emojidict['Warning']} Extension-API down or unresponsive.\n-# Try again later or use `wait_longer`, if not already active."
     elif reason == "ExAPIinvalidResponse":
         return f"{emojidict['Warning']} Extension-API gave an invalid response.\n-# Try again."
     else:
@@ -1176,7 +1176,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         pplist_b = []
         index2 = 0
         for i in pplist:
-            ppscore += int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
+            ppscore += int(round(2.0408163*(i)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
             pplist_b.append(int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2]))
             index2 += 1
         if ppscore >= 1000000 and not ex_certified:
@@ -1777,7 +1777,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             ppscore = 0
             index2 = 0
             for k in pplist:
-                ppscore += int(round(2.0408163*(i if i < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
+                ppscore += int(round(2.0408163*(i)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
                 index2 += 1
             if ppscore >= 1000000 and not ex_certified:
                 ppscore = 999999
@@ -1893,8 +1893,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 ppscore = 0
                 index2 = 0
                 for l in pplist:
-                    ppscore += int(round(1.7777777*((l if l < 750 else 750)**2),0) / [4,8,8,8,8,16,16,16,16][index2])
-                    ppscore += (l - 750) if l > 750 else 0
+                    ppscore += int(round(2.0408163*(l)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
                     index2 += 1
                 rank = emojidict['RankNone']
                 rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
@@ -2021,7 +2020,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                     ppscore = 0
                     index2 = 0
                     for l in pplist:
-                        ppscore += int(round(2.0408163*(l if l < 700 else 700)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
+                        ppscore += int(round(2.0408163*(l)**2,0) / [4,8,8,8,8,16,16,16,16][index2])
                         index2 += 1
                     rank = emojidict['RankNone']
                     rankiconlist = list({"E":emojidict['RankE'],"D":emojidict['RankD'],"D+":emojidict['RankD+'],"C-":emojidict['RankC-'],"C":emojidict['RankC'],"C+":emojidict['RankC+'],"B-":emojidict['RankB-'],"B":emojidict['RankB'],"B+":emojidict['RankB+'],"A-":emojidict['RankA-'],"A":emojidict['RankA'],"A+":emojidict['RankA+'],"S-":emojidict['RankS-'],"S":emojidict['RankS'],"S+":emojidict['RankS+'],"SS":emojidict['RankSS'],"X":emojidict['RankEX']}.values())
