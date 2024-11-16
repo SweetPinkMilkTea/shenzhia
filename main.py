@@ -199,7 +199,7 @@ def calibrate():
                 maxStarpower += len(i["starPowers"])
                 maxCurrency += 20245
                 maxCurrencyAdv += 20245 + 6000
-            maxHypercharges = 43
+            maxHypercharges = 49
             maxCurrency += maxHypercharges * 5000
             maxCurrencyAdv += maxHypercharges * 5000
             calStatus = 200
