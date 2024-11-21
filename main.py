@@ -947,6 +947,9 @@ async def mastery(ctx: interactions.SlashContext, tag: str = "", wait_longer: bo
                     async with session.get(url2, headers=headers) as response:
                         su_data = await response.json()
                 su_data["response"]
+                if su_data["response"] == None:
+                    print("Check passed")
+                    await ctx.send(send_api_error("ExAPIinvalidResponse"),ephemeral=True)
             except TypeError:
                 await ctx.send(send_api_error("ExAPIinvalidResponse"),ephemeral=True)
             except:
