@@ -1128,6 +1128,8 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
             try:
                 async with session.get(url2, headers=headers,timeout=10) as response:
                     su_data = await response.json()
+                    if su_data["response"] == None:
+                        raise Exception("Extension API - Invalid response")
             except:
                 su_data = 0
         try:
