@@ -2,11 +2,7 @@
 > Searching for bot usage documentation? Find information on using the bot on the wiki section of the repo.
 
 > [!CAUTION]
-> This bot is in active development. Anything might be changed without notice.
-> 
 > This bot has not been tested against large numbers of users/servers. Be aware that performance problems might arise under such circumstances.
-> 
-> Create Issues for ideas for Improvement or when something is not working.
 
 # About
 This is Shenzhia, a python discord bot.
