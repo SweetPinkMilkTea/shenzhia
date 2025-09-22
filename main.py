@@ -653,7 +653,7 @@ async def set_gpt_usage(ctx: interactions.SlashContext, user: str, amount: int):
 # GLOBAL COMMANDS BELOW
 #---------------------------
 
-@interactions.slash_command(name="whois", description="Get linked tags for users of Shenzhia.")
+@interactions.slash_command(name="whois", description="Get linked tags for users of BSBot.")
 @interactions.slash_option(name="id", description="ID of the user in question", required=True, opt_type=interactions.OptionType.STRING)
 async def whois(ctx: interactions.SlashContext, id: str):
     await ctx.defer()
@@ -670,12 +670,12 @@ async def whois(ctx: interactions.SlashContext, id: str):
                 embed.add_field(name=f"[{i+1}] - {tags[id][i]}",value=f" ")
             except:
                 pass
-        embed.set_footer(text="Shenzhia",
+        embed.set_footer(text="BSBot",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         await ctx.send(embed=embed)
         return
     
-@interactions.slash_command(name="leaderboard", description="Find the best Shenzhia users!")
+@interactions.slash_command(name="leaderboard", description="Find the best BSBot users!")
 async def leaderboard(ctx: interactions.SlashContext):
     await ctx.defer()
     with open("bs_data.json") as f:
@@ -690,7 +690,7 @@ async def leaderboard(ctx: interactions.SlashContext):
         for i, k in zip(tags, names):
             for j in i:
                 tag_dict[j] = k
-    embed = interactions.Embed(title=f"BEST SHENZHIA USERS",
+    embed = interactions.Embed(title=f"BEST BSBot USERS",
                 color=0x6f07b4,
                 timestamp=datetime.datetime.now())
     index = 0
@@ -712,7 +712,7 @@ async def leaderboard(ctx: interactions.SlashContext):
         if index != 3:
             index += 1
         placement += 1
-    embed.set_footer(text="Shenzhia",
+    embed.set_footer(text="BSBot",
                 icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
     return
@@ -853,7 +853,7 @@ async def profilelinkview(ctx: interactions.SlashContext):
                     embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value=f"Most recent Trophies: {bsdict[tags[str(ctx.author.id)][i]]['history'][-1]['value']:,} / Best TSR: {tsrbest[tags[str(ctx.author.id)][i]]:,}")
                 except:
                     embed.add_field(name=f"[{i+1}] - {tags[str(ctx.author.id)][i]}",value="*No records*")
-    embed.set_footer(text="Shenzhia",
+    embed.set_footer(text="BSBot",
                     icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
@@ -930,7 +930,7 @@ async def bling(ctx: interactions.SlashContext, tag: str = ""):
 
         embed.add_field(name=f"{emojidict['Trophy']}",value=f"{totaltrophies:,} ≫ {totaltrophies-deduction:,} (-{deduction})",inline=False)
         embed.add_field(name=f"{emojidict['Bling']}",value="+"+str(bling),inline=False)
-        embed.set_footer(text="Shenzhia",
+        embed.set_footer(text="BSBot",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
@@ -1432,7 +1432,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
         try:
             if tag[0] in ["#8VGY00G9"]:
                 if tag[0] == "#8VGY00G9":
-                    embed.add_field(name=f"{emojidict['Gold']} SHENZHIA DEVELOPER",value=f" ",inline=False)
+                    embed.add_field(name=f"{emojidict['Gold']} BSBot DEVELOPER",value=f" ",inline=False)
             elif tag[0] in bs_leaderboard_data:
                 if bs_leaderboard_data.index(tag[0])+1 < 11:
                     icon = f"{emojidict['Gold']} "
@@ -1450,7 +1450,7 @@ async def performance(ctx: interactions.SlashContext, tag: str = "", extend: boo
                     icon = f"{emojidict['Bronze']} "
                 else:
                     icon = ""
-                embed.add_field(name=f"{icon}#{bs_local_leaderboard_data.index(tag[0])+1} SHENZHIA USER",value=f" ",inline=False)
+                embed.add_field(name=f"{icon}#{bs_local_leaderboard_data.index(tag[0])+1} BSBot USER",value=f" ",inline=False)
             else:
                 embed.add_field(name=f"---",value=f" ",inline=False)
         except:
@@ -1683,7 +1683,7 @@ async def progression(ctx: interactions.SlashContext, tag: str = "", advanced: b
             embed.add_field(name=f"TOTAL PROGRESSION",value=f"{maxed} / {len(data['brawlers'])} maxed brawlers\nCompletion% : {round(((maxCurrencyAdv-neededCurrency)/maxCurrencyAdv)*100,2)}%",inline=False)
         if str(ctx.author_id) not in tags:
             embed.add_field(name=f"{emojidict['Info']}", value="Is this profile yours? Link it with /profilelink to get more utility!")
-        embed.set_footer(text="Shenzhia",
+        embed.set_footer(text="BSBot",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         embeds.append(embed)
     pg = Paginator.create_from_embeds(bot, *embeds)
@@ -1910,7 +1910,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
         embed.add_field(name="Average TSR-Deviation",
                         value=f"{'+' if result > 0 else ''}{result:,}",
                         inline=True)
-        embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
+        embed.set_footer(text="BSBot", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     else:
         if duel_mode:
             result = data["battle"]["result"].upper()
@@ -2028,7 +2028,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
             embed.add_field(name="Average TSR-Deviation",
                             value=f"{'+' if result > 0 else ''}{result:,}",
                             inline=True)
-            embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
+            embed.set_footer(text="BSBot", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
         else:
             result = data["battle"]["result"].upper()
             battletype = data["battle"]["mode"].upper()
@@ -2199,7 +2199,7 @@ async def matchanalysis(ctx: interactions.SlashContext, tag: str = "", offset: i
                 embed.add_field(name="Average TSR-Deviation",
                                 value=f"{'+' if result > 0 else ''}{result:,}",
                                 inline=True)
-                embed.set_footer(text="Shenzhia", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
+                embed.set_footer(text="BSBot", icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
                 if isRankedDiv:
                     with open("bs_powerleague.json", "w") as f:
                         json.dump(pl_saves,f)
@@ -2400,7 +2400,7 @@ async def status(ctx: interactions.SlashContext):
     embed.add_field(name="-----",value=" ",inline=False)
     embed.add_field(name="Status Codes (Main API)",value=f"200: OK\n400: Incorrect request template\n403: API Key expired/wrong\n429: Client overloaded\n500: Unknown API-Server issue\n503: Maintenance",inline=True)
     embed.add_field(name="Status Codes (Extended)",value=f"0: OK\n1: Error",inline=True)
-    embed.set_footer(text="Shenzhia",
+    embed.set_footer(text="BSBot",
                         icon_url="https://cdn.discordapp.com/avatars/1048344472171335680/044c7ebfc9aca45e4a3224e756a670dd.webp?size=160")
     await ctx.send(embed=embed)
 
@@ -2533,7 +2533,7 @@ async def gpt_prompt(ctx: interactions.SlashContext, content: str, export: bool 
             else:
                 await ctx.send(f"{appendstr}",file=interactions.File(file, "gpt_result.txt"))
 
-@interactions.slash_command(name="gallery", description="View art of Shenzhia.")
+@interactions.slash_command(name="gallery", description="View art of BSBot.")
 async def gallery(ctx: interactions.SlashContext):
     await ctx.defer(ephemeral=True)
     embeds = []
@@ -2554,9 +2554,9 @@ async def help(ctx: interactions.SlashContext):
     embed = interactions.Embed(title="Get started (beta)",
                       color=0x6f07b4,
                       timestamp=datetime.datetime.now())
-    embed.add_field(name="View repository",value="- [Main page](<https://github.com/SweetPinkMilkTea/shenzhia>)", inline=True)
-    embed.add_field(name="View wiki",value="- [Commands](<https://github.com/SweetPinkMilkTea/shenzhia/wiki/Commands-and-Usage>)\n- [Terms](<https://github.com/SweetPinkMilkTea/shenzhia/wiki/Terms>)", inline=True)
-    embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/shenzhia/issues>)", inline=True)
+    embed.add_field(name="View repository",value="- [Main page](<https://github.com/SweetPinkMilkTea/BSBot>)", inline=True)
+    embed.add_field(name="View wiki",value="- [Commands](<https://github.com/SweetPinkMilkTea/BSBot/wiki/Commands-and-Usage>)\n- [Terms](<https://github.com/SweetPinkMilkTea/BSBot/wiki/Terms>)", inline=True)
+    embed.add_field(name="Report problems or suggest additions",value="- [Issue Page](<https://github.com/SweetPinkMilkTea/BSBot/issues>)", inline=True)
     await ctx.send(embed=embed)
 
 # -------------------
