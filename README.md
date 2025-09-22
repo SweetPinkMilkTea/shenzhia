@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This project is no longer being worked on.
+
 > [!TIP]
 > Searching for bot usage documentation? Find information on using the bot on the wiki section of the repo.
 
