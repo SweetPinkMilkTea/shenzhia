@@ -8,13 +8,13 @@
 > This bot has not been tested against large numbers of users/servers. Be aware that performance problems might arise under such circumstances.
 
 # About
-This is Shenzhia, a python discord bot.
+This is BSBot, a python discord bot.
 
 Its use is communicating with the Brawl Stars API and displaying data to the requester in an engaging format.
 
 Additionally, it can save and work with received data to further utilize API data.
 
-Shenzhia uses [`discord-interactions-py`](https://github.com/interactions-py/interactions.py) as it's Discord API wrapper. 
+BSBot uses [`discord-interactions-py`](https://github.com/interactions-py/interactions.py) as it's Discord API wrapper. 
 
 # Setup
 ## Create and Invite your Bot
@@ -42,23 +42,23 @@ Invite your Bot to your server after.
 
 ### API
 
-Shenzhia needs additional resources outside of python related to you. These consist of:
+BSBot needs additional resources outside of python related to you. These consist of:
 - A Discord Bot Token gotten while creating your bot in [Discords Developer Platform](https://discord.com/developers)
 - A Brawl Stars API Token via their [Webpage](https://developer.brawlstars.com/#/)
 > [!NOTE]
 > The API requires your bot host's IP. If it's IP changes, you have to regenerate your key. 
 >
-> Shenzhia will notify you either when starting the bot or if a request fails because of this.
+> BSBot will notify you either when starting the bot or if a request fails because of this.
 
 - A Sentry DSN for capturing any exceptions that may occur. Create a new project [on their site](https://sentry.io) and select *Python*. Skip the Framework selection and just copy the string shown after `dsn=`.
 
 > [!WARNING]
-> You can use the bot without Sentry's service, this however requires editing Shenzhia's code.
+> You can use the bot without Sentry's service, this however requires editing BSBot's code.
 
 - An OpenAI API Key for using the `/gpt` command. You may skip this if you don't intent on using the feature or have no way of obtaining a key.
 
 ### Custom Emojis
-Custom Emojis are an integral part of Shenzhia by visualizing a lot of data in a more digestible format than simply dumping text everywhere.
+Custom Emojis are an integral part of BSBot by visualizing a lot of data in a more digestible format than simply dumping text everywhere.
 However, for them to function, they have to be set first.
 
 A bot can use an emoji reference (e.g. `<:bingus:1228965645262258207>`) to display custom emojis.
@@ -147,4 +147,4 @@ Finally, set all needed Emojis.
 After entering everything, your first-run-setup is done!
 
 > [!TIP]
-> To start off optimally, use the Wiki Section of this repo to learn all commands that Shenzhia has to offer.
+> To start off optimally, use the Wiki Section of this repo to learn all commands that BSBot has to offer.
